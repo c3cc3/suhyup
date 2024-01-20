@@ -1,0 +1,5 @@
+GenLicense.o: GenLicense.c /ums/fq/include/fq_common.h \
+ /ums/fq/include/config.h /ums/fq/include/fq_defs.h \
+ /ums/fq/include/fq_cache.h /ums/fq/include/fq_logger.h \
+ /ums/fq/include/fq_global.h /ums/fq/include/fq_version.h \
+ /ums/fq/include/fq_types.h

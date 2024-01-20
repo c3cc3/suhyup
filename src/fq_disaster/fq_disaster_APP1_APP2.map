@@ -1,0 +1,47 @@
+# 1-th action
+# 2-th local queue path
+# 3-th local queue name
+# 4-th remote queue path
+# 5-th remote queue name
+# examples
+# RECV /home/ums/fq/enmq KT /home/ums/fq/enmq TST1
+# SEND /umsdata2/enmq GW-REAL-PREHIST /umsdata1/enmq GW-REAL-PREHIST
+###################################################################
+SEND /umsdata1/enmq GW-REAL-PREHIST /umsdata2/enmq GW-REAL-PREHIST
+SEND /umsdata1/enmq GW-DIST-PREHIST /umsdata2/enmq GW-DIST-PREHIST
+SEND /umsdata1/enmq GW-BAT-PREHIST /umsdata2/enmq GW-BAT-PREHIST
+SEND /umsdata1/enmq GW-REAL-REQ-815 /umsdata2/enmq GW-REAL-REQ-815
+SEND /umsdata1/enmq GW-REAL-REQ-816 /umsdata2/enmq GW-REAL-REQ-816
+SEND /umsdata1/enmq GW-REAL-REQ-817 /umsdata2/enmq GW-REAL-REQ-817
+SEND /umsdata1/enmq GW-REAL-HIST /umsdata2/enmq GW-REAL-HIST
+SEND /umsdata1/enmq GW-REAL-HIST-MKT /umsdata2/enmq GW-REAL-HIST-MKT
+SEND /umsdata1/enmq GW-REAL-HIST-RSV /umsdata2/enmq GW-REAL-HIST-RSV
+SEND /umsdata1/enmq GW-REAL-HIST-815 /umsdata2/enmq GW-REAL-HIST-815
+SEND /umsdata1/enmq GW-REAL-HIST-816 /umsdata2/enmq GW-REAL-HIST-816
+SEND /umsdata1/enmq GW-REAL-HIST-817 /umsdata2/enmq GW-REAL-HIST-817
+SEND /umsdata1/enmq GW-REAL-RESERVE /umsdata2/enmq GW-REAL-RESERVE
+SEND /umsdata1/enmq GW-REAL-FAIL /umsdata2/enmq GW-REAL-FAIL
+SEND /umsdata1/enmq GW-REAL-FAIL-815 /umsdata2/enmq GW-REAL-FAIL-815
+SEND /umsdata1/enmq GW-REAL-FAIL-816 /umsdata2/enmq GW-REAL-FAIL-816
+SEND /umsdata1/enmq GW-REAL-FAIL-817 /umsdata2/enmq GW-REAL-FAIL-817
+SEND /umsdata1/enmq GW-BAT-REQ /umsdata2/enmq GW-BAT-REQ
+SEND /umsdata1/enmq GW-EAI-ACK /umsdata2/enmq GW-EAI-ACK
+SEND /umsdata1/enmq GW-EAI-ACK-LOG /umsdata2/enmq GW-EAI-ACK-LOG
+SEND /umsdata1/enmq GW-BAT-HIST /umsdata2/enmq GW-BAT-HIST
+SEND /umsdata1/enmq GW-EAI-RPT-LOG /umsdata2/enmq GW-EAI-RPT-LOG
+SEND /umsdata1/enmq GW-EAI-RPT /umsdata2/enmq GW-EAI-RPT
+SEND /umsdata1/enmq GW-EAI-LAW /umsdata2/enmq GW-EAI-LAW
+SEND /umsdata1/enmq GW-EAI-LAW-LOG /umsdata2/enmq GW-EAI-LAW-LOG
+SEND /umsdata1/enmq GW-RESEND-HIST /umsdata2/enmq GW-RESEND-HIST
+SEND /umsdata1/enmq GW-MKT-STAT /umsdata2/enmq GW-MKT-STAT
+SEND /umsdata1/enmq KT_ONL /umsdata2/enmq KT_ONL
+SEND /umsdata1/enmq KT_BAT /umsdata2/enmq KT_BAT
+SEND /umsdata1/enmq LG_SM_ONL /umsdata2/enmq LG_SM_ONL
+SEND /umsdata1/enmq LG_MM_ONL /umsdata2/enmq LG_MM_ONL
+SEND /umsdata1/enmq LG_SM_BAT /umsdata2/enmq LG_SM_BAT
+SEND /umsdata1/enmq LG_MM_BAT /umsdata2/enmq LG_MM_BAT
+SEND /umsdata1/enmq K_ONL /umsdata2/enmq K_ONL
+SEND /umsdata1/enmq K_BAT /umsdata2/enmq K_BAT
+SEND /umsdata1/enmq C_ONL /umsdata2/enmq C_ONL
+SEND /umsdata1/enmq C_BAT /umsdata2/enmq C_BAT
+###################################################################

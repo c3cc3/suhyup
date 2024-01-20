@@ -1,0 +1,47 @@
+# 1-th action
+# 2-th local queue path
+# 3-th local queue name
+# 4-th remote queue path
+# 5-th remote queue name
+# examples
+# RECV /home/ums/fq/enmq KT /home/ums/fq/enmq TST1
+# SEND /pushdata2/enmq GW-REAL-PREHIST /pushdata1/enmq GW-REAL-PREHIST
+###################################################################
+SEND /pushdata1/enmq GW-REAL-PREHIST /pushdata2/enmq GW-REAL-PREHIST
+SEND /pushdata1/enmq GW-DIST-PREHIST /pushdata2/enmq GW-DIST-PREHIST
+SEND /pushdata1/enmq GW-BAT-PREHIST /pushdata2/enmq GW-BAT-PREHIST
+SEND /pushdata1/enmq GW-REAL-REQ-815 /pushdata2/enmq GW-REAL-REQ-815
+SEND /pushdata1/enmq GW-REAL-REQ-816 /pushdata2/enmq GW-REAL-REQ-816
+SEND /pushdata1/enmq GW-REAL-REQ-817 /pushdata2/enmq GW-REAL-REQ-817
+SEND /pushdata1/enmq GW-REAL-HIST /pushdata2/enmq GW-REAL-HIST
+SEND /pushdata1/enmq GW-REAL-HIST-MKT /pushdata2/enmq GW-REAL-HIST-MKT
+SEND /pushdata1/enmq GW-REAL-HIST-RSV /pushdata2/enmq GW-REAL-HIST-RSV
+SEND /pushdata1/enmq GW-REAL-HIST-815 /pushdata2/enmq GW-REAL-HIST-815
+SEND /pushdata1/enmq GW-REAL-HIST-816 /pushdata2/enmq GW-REAL-HIST-816
+SEND /pushdata1/enmq GW-REAL-HIST-817 /pushdata2/enmq GW-REAL-HIST-817
+SEND /pushdata1/enmq GW-REAL-RESERVE /pushdata2/enmq GW-REAL-RESERVE
+SEND /pushdata1/enmq GW-REAL-FAIL /pushdata2/enmq GW-REAL-FAIL
+SEND /pushdata1/enmq GW-REAL-FAIL-815 /pushdata2/enmq GW-REAL-FAIL-815
+SEND /pushdata1/enmq GW-REAL-FAIL-816 /pushdata2/enmq GW-REAL-FAIL-816
+SEND /pushdata1/enmq GW-REAL-FAIL-817 /pushdata2/enmq GW-REAL-FAIL-817
+SEND /pushdata1/enmq GW-BAT-REQ /pushdata2/enmq GW-BAT-REQ
+SEND /pushdata1/enmq GW-EAI-ACK /pushdata2/enmq GW-EAI-ACK
+SEND /pushdata1/enmq GW-EAI-ACK-LOG /pushdata2/enmq GW-EAI-ACK-LOG
+SEND /pushdata1/enmq GW-BAT-HIST /pushdata2/enmq GW-BAT-HIST
+SEND /pushdata1/enmq GW-EAI-RPT-LOG /pushdata2/enmq GW-EAI-RPT-LOG
+SEND /pushdata1/enmq GW-EAI-RPT /pushdata2/enmq GW-EAI-RPT
+SEND /pushdata1/enmq GW-EAI-LAW /pushdata2/enmq GW-EAI-LAW
+SEND /pushdata1/enmq GW-EAI-LAW-LOG /pushdata2/enmq GW-EAI-LAW-LOG
+SEND /pushdata1/enmq GW-RESEND-HIST /pushdata2/enmq GW-RESEND-HIST
+SEND /pushdata1/enmq GW-MKT-STAT /pushdata2/enmq GW-MKT-STAT
+SEND /pushdata1/enmq KT_ONL /pushdata2/enmq KT_ONL
+SEND /pushdata1/enmq KT_BAT /pushdata2/enmq KT_BAT
+SEND /pushdata1/enmq LG_SM_ONL /pushdata2/enmq LG_SM_ONL
+SEND /pushdata1/enmq LG_MM_ONL /pushdata2/enmq LG_MM_ONL
+SEND /pushdata1/enmq LG_SM_BAT /pushdata2/enmq LG_SM_BAT
+SEND /pushdata1/enmq LG_MM_BAT /pushdata2/enmq LG_MM_BAT
+SEND /pushdata1/enmq K_ONL /pushdata2/enmq K_ONL
+SEND /pushdata1/enmq K_BAT /pushdata2/enmq K_BAT
+SEND /pushdata1/enmq C_ONL /pushdata2/enmq C_ONL
+SEND /pushdata1/enmq C_BAT /pushdata2/enmq C_BAT
+###################################################################

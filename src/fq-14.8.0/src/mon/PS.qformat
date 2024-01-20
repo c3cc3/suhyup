@@ -1,0 +1,16 @@
+#
+# QU(Queue Infomation) send format
+# edit : 2015/06/25
+# editor: Gwisang.Choi
+#########################################################################################
+# field name            length  source
+#                       158-total bytes
+##########################################################################################
+length             		4       FIXED    "1154"    			STR     N       000 0 0
+Kind             		2       FIXED    "PS"    			STR     N       000 0 0
+gen_ymd					8		SYS_DATE "#"				STR		N		000 0 0
+gen_hms					6		CACHE    "#"				STR		N		000 0 0
+HostName             	64      POST     "#"    			STR     N       000 0 0
+PSLIST             		1024    POST     "#"    			STR     N       000 0 0
+dummy					50		FIXED    "#"				STR		N		000 0 0 
+#########################################################################################

@@ -1,0 +1,66 @@
+EXTRA_DIST = README VERSION.history rebuild.sh lib.list ncurses-6.4.tar.gz
+SUBDIRS = src/lib\
+         src/utl\
+         src/mon\
+         src/tst\
+		src/monitor\
+		src/shm_monitor\
+		src/fq_mon_svr\
+		src/fq_mon_cli\
+		src/webgate_client\
+		src/json_simulate\
+		src/all_queue_test\
+		src/fqpm\
+		src/fqpm/fqpm_clear\
+		src/import\
+		src/fq_callback_svr\
+		src/fq_handler/svr\
+		src/fq_handler/cli\
+		src/fq_handler/cli/fq_put_agent\
+		src/fq_handler/cli/fq_get_agent\
+		src/log_notifier\
+		src/fq_handler_json/svr\
+		src/fq_handler_json/cli\
+		src/fq_handler_json/put_agent\
+		src/fq_handler_json/get_agent\
+		src/fq_handler_json/fq_agent_threads\
+		src/subQ_distribute\
+		src/fq_alarm_svr\
+		src/fq_alarm_client\
+		src/fq_deadlock_release\
+		src/nmon\
+		src/wmonitor
+DIST_SUBDIRS = src/lib\
+        src/utl\
+        src/mon\
+        src/tst\
+		src/monitor\
+		src/shm_monitor\
+		src/fq_mon_svr\
+		src/fq_mon_cli\
+		src/webgate\
+		src/webgate_client\
+		src/json_simulate\
+		src/all_queue_test\
+		src/fqpm\
+		src/fqpm/fqpm_clear\
+		src/import\
+		src/fq_callback_svr\
+		src/fq_handler/svr\
+		src/fq_handler/cli\
+		src/fq_handler/cli/fq_put_agent\
+		src/fq_handler/cli/fq_get_agent\
+		src/log_notifier\
+		src/fq_handler_json/svr\
+		src/fq_handler_json/cli\
+		src/fq_handler_json/put_agent\
+		src/fq_handler_json/get_agent\
+		src/fq_handler_json/fq_agent_threads\
+		src/subQ_distribute\
+		src/fq_alarm_svr\
+		src/fq_alarm_client\
+		src/fq_deadlock_release\
+		src/nmon\
+		src/wmonitor
+		
+ACLOCAL_AMFALGS = -I m4

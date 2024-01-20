@@ -1,0 +1,7 @@
+is_guarantee_user.o: is_guarantee_user.c \
+ /home/ums/fq/include/fq_hashobj.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_global.h /home/ums/fq/include/fq_version.h \
+ /home/ums/fq/include/fq_types.h /home/ums/fq/include/fq_flock.h \
+ /home/ums/fq/include/fq_codemap.h /home/ums/fq/include/fq_cache.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h /home/ums/fq/include/fq_logger.h

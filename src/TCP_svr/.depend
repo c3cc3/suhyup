@@ -1,0 +1,18 @@
+TCP_sync_svr.o: TCP_sync_svr.c /home/ums/fq/include/fq_param.h \
+ /home/ums/fq/include/fq_config.h /home/ums/fq/include/fq_cache.h \
+ /home/ums/fq/include/fq_global.h /home/ums/fq/include/fq_version.h \
+ /home/ums/fq/include/fq_types.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fqueue.h /home/ums/fq/include/fq_flock.h \
+ /home/ums/fq/include/fq_unixQ.h /home/ums/fq/include/fq_eventlog.h \
+ /home/ums/fq/include/fq_external_env.h /home/ums/fq/include/fq_monitor.h \
+ /home/ums/fq/include/fq_semaphore.h /home/ums/fq/include/fq_linkedlist.h \
+ /home/ums/fq/include/fq_hashobj.h /home/ums/fq/include/fq_codemap.h \
+ /home/ums/fq/include/fq_heartbeat.h /home/ums/fq/include/fq_common.h \
+ /home/ums/fq/include/config.h /home/ums/fq/include/fq_defs.h \
+ /home/ums/fq/include/fq_typedef.h /home/ums/fq/include/fq_conf.h \
+ /home/ums/fq/include/fq_manage.h /home/ums/fq/include/fqueue.h \
+ /home/ums/fq/include/parson.h /home/ums/fq/include/fq_socket.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_common.h \
+ /home/ums/fq/include/fq_monitor.h /home/ums/fq/include/fq_protocol.h \
+ /home/ums/fq/include/fq_tcp_client_obj.h \
+ /home/ums/fq/include/fq_config.h

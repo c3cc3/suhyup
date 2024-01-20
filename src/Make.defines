@@ -1,0 +1,8 @@
+CC=gcc
+AR=ar
+FQ_LIB=/ums/fq/lib
+FQ_INC=/ums/fq/include
+LIBS=-lpthread -lrt -lm -lfq
+BIN_INSTALL_PATH=/ums/fq/exec
+CONF_INSTALL_PATH=/ums/fq/conf
+

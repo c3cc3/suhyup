@@ -1,0 +1,29 @@
+#
+/umsdata1/enmq/GW-REAL-HIST 01
+/umsdata1/enmq/GW-BAT-HIST 01
+/umsdata1/enmq/GW-RESEND-HIST 01
+/umsdata1/enmq/GW-REAL-HIST-815 01
+/umsdata1/enmq/GW-REAL-HIST-816 01
+/umsdata1/enmq/GW-REAL-HIST-817 01
+/umsdata1/enmq/GW-REAL-RESERVE 01
+/umsdata1/enmq/GW-REAL-FAIL 01
+/umsdata1/enmq/GW-EAI-ACK 01
+#
+/umsdata1/enmq/GW-REAL-REQ 02
+/umsdata1/enmq/GW-BAT-REQ 02
+#
+/umsdata1/enmq/LG_SM_ONL 03
+/umsdata1/enmq/LG_MM_ONL 03
+/umsdata1/enmq/LG_SM_BAT 03
+/umsdata1/enmq/LG_MM_BAT 03
+/umsdata1/enmq/K_ONL 03
+/umsdata1/enmq/K_BAT 03
+/umsdata1/enmq/C_ONL 03
+/umsdata1/enmq/C_BAT 03
+#
+/umsdata1/enmq/GW-REAL-PREHIST 04
+/umsdata1/enmq/GW-BAT-PREHIST 04
+/umsdata1/enmq/GW-EAI-RPT-LOG 04
+/umsdata1/enmq/GW-EAI-RPT 04
+/umsdata1/enmq/GW-EAI-LAW 04
+/umsdata1/enmq/GW-EAI-LAW-LOG 04

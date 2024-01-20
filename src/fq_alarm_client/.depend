@@ -1,0 +1,55 @@
+fq_alarm_client.o: fq_alarm_client.c /home/ums/fq/include/fq_common.h \
+ /home/ums/fq/include/config.h /home/ums/fq/include/fq_defs.h \
+ /home/ums/fq/include/fq_cache.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_global.h /home/ums/fq/include/fq_version.h \
+ /home/ums/fq/include/fq_types.h /home/ums/fq/include/fq_delimiter_list.h \
+ /home/ums/fq/include/fq_codemap.h /home/ums/fq/include/fqueue.h \
+ /home/ums/fq/include/fq_flock.h /home/ums/fq/include/fq_unixQ.h \
+ /home/ums/fq/include/fq_eventlog.h \
+ /home/ums/fq/include/fq_external_env.h /home/ums/fq/include/fq_monitor.h \
+ /home/ums/fq/include/fq_semaphore.h /home/ums/fq/include/fq_linkedlist.h \
+ /home/ums/fq/include/fq_hashobj.h /home/ums/fq/include/fq_codemap.h \
+ /home/ums/fq/include/fq_heartbeat.h /home/ums/fq/include/fq_common.h \
+ /home/ums/fq/include/fq_typedef.h /home/ums/fq/include/fq_conf.h \
+ /home/ums/fq/include/fq_manage.h /home/ums/fq/include/fqueue.h \
+ /home/ums/fq/include/parson.h /home/ums/fq/include/fq_file_list.h \
+ ums_common_conf.h /home/ums/fq/include/fq_config.h queue_ctl_lib.h \
+ /home/ums/fq/include/fq_linkedlist.h fq_alarm_client_conf.h \
+ /home/ums/fq/include/fq_timer.h /home/ums/fq/include/fq_hashobj.h \
+ /home/ums/fq/include/fq_tci.h /home/ums/fq/include/fq_cache.h \
+ /home/ums/fq/include/fq_conf.h /home/ums/fq/include/fq_gssi.h \
+ /home/ums/fq/include/fq_mem.h /home/ums/fq/include/parson.h \
+ /home/ums/fq/include/hash_manage.h /home/ums/fq/include/fq_monitor.h \
+ /home/ums/fq/include/fq_scanf.h
+fq_alarm_client_conf.o: fq_alarm_client_conf.c \
+ /home/ums/fq/include/fq_config.h /home/ums/fq/include/fq_cache.h \
+ /home/ums/fq/include/fq_global.h /home/ums/fq/include/fq_version.h \
+ /home/ums/fq/include/fq_types.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_param.h /home/ums/fq/include/fq_config.h \
+ fq_alarm_client_conf.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h
+queue_ctl_lib.o: queue_ctl_lib.c /home/ums/fq/include/fqueue.h \
+ /home/ums/fq/include/fq_flock.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_global.h /home/ums/fq/include/fq_version.h \
+ /home/ums/fq/include/fq_types.h /home/ums/fq/include/fq_unixQ.h \
+ /home/ums/fq/include/fq_eventlog.h \
+ /home/ums/fq/include/fq_external_env.h /home/ums/fq/include/fq_monitor.h \
+ /home/ums/fq/include/fq_semaphore.h /home/ums/fq/include/fq_linkedlist.h \
+ /home/ums/fq/include/fq_hashobj.h /home/ums/fq/include/fq_codemap.h \
+ /home/ums/fq/include/fq_cache.h /home/ums/fq/include/fq_heartbeat.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h /home/ums/fq/include/fq_typedef.h \
+ /home/ums/fq/include/fq_conf.h /home/ums/fq/include/fq_manage.h \
+ /home/ums/fq/include/fqueue.h /home/ums/fq/include/parson.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/fq_sec_counter.h \
+ /home/ums/fq/include/fq_file_list.h queue_ctl_lib.h \
+ /home/ums/fq/include/fq_config.h /home/ums/fq/include/fq_linkedlist.h \
+ fq_alarm_client_conf.h
+ums_common_conf.o: ums_common_conf.c /home/ums/fq/include/fq_config.h \
+ /home/ums/fq/include/fq_cache.h /home/ums/fq/include/fq_global.h \
+ /home/ums/fq/include/fq_version.h /home/ums/fq/include/fq_types.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_param.h \
+ /home/ums/fq/include/fq_config.h ums_common_conf.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_common.h \
+ /home/ums/fq/include/config.h /home/ums/fq/include/fq_defs.h

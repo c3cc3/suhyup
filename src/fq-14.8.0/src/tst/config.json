@@ -1,0 +1,33 @@
+{
+	"Version": "1.0",
+	"Update": "2020/03/04",
+	"log": {
+		"LogFilename": "/tmp/json_config_test.log",
+		"LogLevel": "debug"
+	},
+	"log_real": {
+		"LogFilename": "/tmp/json_config_test.log",
+		"LogLevel": "error"
+	},
+	"EN_Queues": [
+		"/home/gwisangchoi/data:TST",
+		"/home/gwisangchoi/data1:TST"
+	],
+    "Actors": [
+        "Leonardo DiCaprio",
+        "Joseph Gordon-Levitt",
+        "Ellen Page",
+        "Tom Hardy",
+        "Ken Watanabe"
+    ],
+	"Maps": {
+		"KBStar": "04",
+		"Woori" : "09"
+	},
+	"Codes": {
+		"A001": 1,
+		"A002": 2
+	},
+    "imdbRating": 8.807,
+    "KoreaRelease": true
+}

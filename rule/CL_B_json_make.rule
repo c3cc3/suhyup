@@ -1,0 +1,23 @@
+# 1-th: in 
+# 2-th: out
+# 3-th: message type
+# 5-th: length
+# 4-th: json data type
+# 6-th: mandatory
+HISTORY_KEY|msg_key|json|0|string|0|true
+REFKEY|orgcode|json|0|string|0|true
+RECIPIENT_NUM|recipient|json|0|string|0|true
+CONTS_TXT|content|json|0|string|0|true
+KAKAO_SENDER_KEY|sender_key|json|0|string|0|true
+#KAKAO_TMPL_CD|KAKAO_TMPL_CD|json|0|string|0|true
+KAKAO_BUTTONS|button_info.button|json|0|value|0|true
+optional_data.message_type|optional_data.message_type|fixed|0|string|FL|true
+optional_data.header|optional_data.header|fixed|0|string| |true
+optional_data.item.list|optional_data.item.list|json|0|value|0|true
+ad_flag|ad_flag|fixed|0|string|Y|true
+#
+#CHANNEL_TYPE|CHANNEL_TYPE|json|0|string|0|true
+#KAKAO_TMPL_ITEM_TITLE|KAKAO_TMPL_ITEM_TITLE|json|0|value|0|true
+#FILE_URL|FILE_URL|json|0|value|0|true
+#FILE_IMAGE_LINK|FILE_IMAGE_LINK|json|0|value|0|true
+#MSGKEY|MSGKEY|json|0|string|0|true

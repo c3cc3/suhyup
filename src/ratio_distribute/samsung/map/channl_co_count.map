@@ -1,0 +1,8 @@
+# 1-th col: channel 
+# 2-th col: companies
+# 3-th col: job-kind: 1: forward, 2: json_rule and forward, 3: json_rule and ratio_dist
+SM|2|3
+LM|2|3
+MM|2|3
+KA|1|2
+PU|1|1

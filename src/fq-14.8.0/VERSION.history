@@ -1,0 +1,289 @@
+2018/07/12: add JSON library ( /lib/fq_json.c fq_json.h, tst/json_test.c )
+ver14.0.2
+2019/01/25: add on_get_usage(), 
+			- fq_typedef.h error : bool -> bool_t
+			- All related source was replaced.
+			- added: /tst/on_view_tst.c 
+			- added: /lib/fqueue.c on_do_not_flow()
+			- added: /lib/fqueue.c on_check_competion();
+			- added: /lib/fq_common.c GetAvailableSpace();
+			- added: /lib/fqueue.c on_get_big();
+2019/02/16: add fq_monitor.tar
+2019/02/17: add tst/get_fuser.c
+			modify: lib/fq_common.[ch] -> added : get_fuser() function
+2019/03/01:
+			modify: lib/sema_queue.h,c ( fq_logger_t )
+			modify: lib/sema_queue.h,c
+			modify: tst/sema_queue_test.c
+		
+2019/03/04:
+			bug: Very important
+			/lib/sema_queue.c
+			add sigprocmask(SIG_BLOCK, &sigset, NULL); 
+2019/03/15:
+			add: /tst/TCP_sync_test.c
+			test: /tst/TCP_sync_test.c ACK_mode 1 or 0
+2019/03/19:
+			new: /tst/GenTestDataFile.c
+
+2019/05/08:
+			add: /lib/fqueue.c fqueue.h : on_de_bundle_array
+			new: /utl/deFQ_batch.c
+			
+2019/05/16:
+			add: /lib/fq_common.c fq_common.h : queue_data_file_dump()
+			new: /tst/deFQ_XA_dump.c
+
+ver14.0.4
+2019/05/18:
+			new: /tst/md5_test.c
+				 /lib/fq_md5.c
+				 /lib/fq_md5.h
+ver14.0.5
+2019/07/30
+			new: /tst/json_gssi_gen_test.c
+				/tst/gssi_templete.json
+			changed: /lib/fq_gssi.h
+
+ver14.0.6
+2020/01/29
+		new: /lib/fqueue.c : EN_FULL_BACKUP_MODE and base64 encode
+		new: /tst/enFQ_circular.c
+		new: /tst/base64_decode.c
+		update: /tst/enFQ.c
+2020/02/01
+		bug: in printf(),  size_t -> %zu, off_t -> %jd
+		add function: in /lib/fq_common.[ch], make_daemon()
+2020/02/06
+		add function: in /lib/fq_log.c fq_logger.h  gen_tmp_logname();
+		
+2020/02/20
+		new: parson json library add
+		- lib/parson.c parson.h
+		- tst/parson_write_sample.c parson_read_sample.c
+		- tst/conv_msg_2_json.c
+2020/02/27
+		add: /lib/fq_common.[ch]  isPowerOfTow(x) -> For check if msglen is power of two.
+		bug: /utl/fqm.c fq_open_file_logger()
+
+2020/02/28
+		add function: /lib/fq_file_list.[ch] : append_file_list(): for upgrading fq_monitor.c 
+
+2020/03/02
+		bug: asc_time()  have to free qvf.c fq_eventlog.c
+2020/03/05
+		add library: json_config.[ch]
+2020/03/11
+		upgrade add library: long off_stopwatch_macro_result()
+2020/03/12
+		add function in library fq_cache.[ch] MakeListFromDelimiterMsg() - recursive function
+2020/03/20
+		configure.ac add: -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+		for processsing file bigger than 2Gbytes.
+
+		change: configure.ac 
+2020/03/22
+		/tst/hashobj_test.c bug fix
+		add : /tst/test.Hash.info
+
+2020/03/24
+		new: /tst/write_log_flock.c
+		add function: /lib/fq_common.[ch] :  get_filesize(filename)
+		new: /tst/read_log_flock.c
+
+
+ver14.1.0
+2020/03/25
+		version up: 14.0.7 -> 14.1.0
+		reason: in fq_log.c , We used flock() for multi-thread safe.
+		new add: /lib/fq_safe_write.[ch]
+		new add: /lib/monitor directory and files
+2020/03/28
+		new add: /lib/fq_safe_read.[ch]
+
+
+ver14.1.1
+2020/03/31
+		bug /src/monitor/screen.h fuser.h missing
+
+
+ver14.1.2
+2020/03/31
+		configure.ac : add -Wunused-result in Linux.
+2020/04/01
+		bug: /src/monitor/monitor.c  array -> pointer calloc()
+
+ver14.1.4
+2020/04/04
+		upgrade /src/lib/fq_safe_read.c fq_safe_write.c : en_flock processing for deleting.
+		change: _ACTION -> FQ_ACTION
+		change: /lib/fq_manage.c load_fq_container( fq_logger_t *l );
+		bug: /monitor/monitor.c  main_thread() exit(); error print.
+		new: /utl/mv_from_file_to_fq.c, conf
+		bug: /lib/fq_manage.c line 653 delete *fq_c = NULL;
+
+ver14.1.5
+2020/04/06
+		upgrade: /src/utl/mv_file_to_fq.c
+			FILE_DELETE_OPTION, FILE_DELETE_HOUR_MIN 
+ver14.1.6
+2020/04/07
+		upgrade: /lib/fq_safe_read.c fq_safe_write.c binary mode 
+
+ver14.1.7
+2020/04/15
+		bug: /lib/fq_safe_read.c fq_safe_write.c : lock_filename 
+		#include <genlib.h>
+		dirname()/ basename()
+
+		new: /lib/fq_safe_read_mulit.[ch] : unique_process_id
+			/utl/mv_file_b_to_fq_multi.c
+			/tst/safe_read_multi_test.c
+ver14.1.8
+2020/04/20
+		bug: /monitor/monitor.c 
+		0~9: +48, 10~36: +55
+		%d -> %ld
+
+2020/04/24 
+		bug->/lib/fq_safe_write.c : use freopen()
+		add functions : /lib/shm_queue.c on_get_usage(), on_check_competiton()
+		add file: /tst/FQ_external_env.conf (XML format)
+		changed: /lib/fq_manage.[ch]
+2020/04/27
+		new: /lib/fq_svr_list.[ch]  make struct list.
+
+2020/04/28
+		new: /lib/fq_svr_list.[ch] :
+		update: /lib/fq_socket.[ch] : get_ip_from_hostname() function has been added.
+
+ver14.1.9
+		new: /src/shm_monitor/*
+
+ver14.2.0
+		new: /src/lib/fqueue_callback.[ch]
+		new: /src/tst/fq_callback_test.c
+		new: /src/tst/fq_dir_CB_test.c
+		new: /src/tst/ListCallback_test.c
+		new: /src/lib/shm_queue_callback.[ch]
+		new: /src/tst/shmq_callback_test.c
+ver14.2.1
+		upgrade: /lib/fq_safe_read.c fq_safe_write.c (STX, ETX) 
+			When a file was crashed, We skip crashed data.
+ver14.2.2
+		bug: /lib/fq_safe_read.[ch] char->unsigned char
+
+ver14.2.3
+		/lib/fq_tci.c : add funciton: make_json();
+		/tst/tci_aformat_json.c
+ver14.2.4
+		/lib/fq_manage.c load_fq_container() ->include shared memory queue.
+		/monitor/monitor.c all_open_queues() ->include shared memory queue.
+ver14.2.5
+		/lib/fq_tci.c : bug fetch
+		/lib/fqeuue.c : bug fetch : CloseFileQueue() memory leak
+ver14.2.6
+		/lib/fq_log: chomd(file, 0666); added
+		/lib/fq_flock.h: #define ETC 3: bug patched
+ver14.2.7
+		/lib/fq_flock: add on_flock2() , on_unflock2()
+
+ver14.2.8 2020/12/31
+		/lib/fq_cache.[ch] : add fqlist_CB() .
+		/tst/fqlist_CB_test.c new
+		new : /lib/fq_linkedlist.[ch]  void type
+		new : /tst/linkedlist_test.c
+ver14.2.9 2021/01/06
+		/lib/fq_common.[ch]: add function subst();
+
+ver14.3.4 2021/07/28
+		/lib/fq_launcher.[ch] -> new
+		/lib/fq_ratio_distribute.[ch] -> new
+		/lib/fq_manage.c -> add : fqpm libraries
+
+ver14.5.1 2023/07/25
+		/src/webgate/webgate.c add : svc 0008
+ver14.5.2 2023/07/30
+		/src/lib/feueue.[ch]  add: MoveFileQueue_XA()
+		/src/webgate/ add service: MoveFileQueue
+ver14.5.3 2023/08/01
+		/src/webgate_client add
+ver14.5.4 2023/08/02
+		/src/webgate/webgate.c add fq_categories and /map/fq_categories.map.
+		append to conf. FQ_CATEGORIES_CODEMAP_FILE = /home/ums/fq/map/fq_categories.map
+
+ver14.5.5 2023/08/12: JSON version handler
+		/src/fq_handler_json/svr/
+		/src/fq_handler_json/cli/
+		/lib/parson.[ch] : add a function : debug_json(l, jsonValue);
+
+ver14.5.6 2023/08/15: /src/fq_handler_json/svr/ all queue open function.
+ver14.5.8 2023/09/10: /src/fq_handler_json/cli/get_agent, put_agent
+ver14.5.9 2023/09/15: /src/fq_handler_json/cli/get_agent, put_agent
+					  /src/lib/fq_protocol.[ch] : add HCHK health checking
+					
+					  /src/tst/json_rule_make_tst.c
+
+					  /src/fq_handler_json/svr: eventlog
+					  /src/webgate/:  eventlog
+
+ver14.6.0 2023/09/22 lib/fqueue.c read retry routinue add. We do not permit that first character is 0x00.->0x01 
+		  2023/09/24 tst/hashobj_test.c ->upgrade
+ver14.6.1 2023/09/27 lib/fq_common.c delete_a_line_from_file() add
+									 replace_a_line_from_file()
+					 lib/fqueue.c UnlinkFileQueue() update:  delete a qname in ListFQ.info
+					 add GEN_SHMQ_INFO in /utl/fqm.c: Automatically add qname in ListFQ.info
+					 utl/fq_view.c -> new
+					 utl/fqm.c add FQ_DATA_VIEW command.
+
+ver14.6.2 2023/10/07 /fq_handler_json/fq_agent_threads/ new
+					 /tst/hashobj_test.c add: mon function
+
+ver14.6.3 2023/10/14 fqm upgrade : function: We can create and unlink by fqm_queue.list
+		fq_hoashobj.c : new func : Export_Hash(), Scan_Hash()
+	
+ver14.6.4 2023/10/21 /src/SubQ_distribute/ -> new
+	      2023/10/24 /src/fq_handler_svr_json/svr, client: health checking complete.
+
+ver14.6.5 2023/10/26 /src/utl/fqm.c : FQ_RESET -> Addd warning message. ->upgrade
+		  2023/10/27 /src/monitor/monitor.c : upgrade : winsize, refresh
+
+ver14.6.6 2023/10/27 /src/fq_mon_svr/ upgrade:  For SMS alarm, it put alarm_msg to FQPM_ALALM queue.
+		  2023/10/28 /src/monitor/monitor.c : bug -> en_competition == 0 -> locked
+												     de_competition == 0 -> locked
+
+ver14.6.7 2023/10/30 /src/fq_alarm_svr/* : new 
+		  2022/11/01 /src/fq_alarm_client/* new
+		  2022/11/03 /src/deadlock_release.c new ->timer example
+
+ver14.7.0 2023/11/6	/src/nmon new
+					/src/utl/fqm.c upgrade : Use /ums/enmq/fqm_queue.list fqm_shm_queue.list FQ/SHMQ Test OK.
+
+ver14.7.1 2023/11/11 bug patch: fq_monitor.h : qname[16] -> qname[16+1]
+							reason: fq_handler_svr_json overflow
+ver14.7.2 2023/11/14 /lib/fq_hashobj.c 
+					add funciton: Import_Hash();
+					add ManageHashMap.c : scan function
+ver14.7.3 2023/11/16 /src/wmonitor/ -> New
+					for SAMSUNG monitoring. wide version monitor
+					bug: /src/monitor/monitor.c : MAX_FILE_QUEUES 100 -> 500
+ver14.7.4 2023/11/16 /tst/hashobj_test.c upgrade: con command : It sees value of key continuously.
+
+ver14.7.5 2023/11/17 /lib/extract_files_from_dir.[ch] Add new functions for SAMSUNG security Co.
+ver14.7.6 2023/11/17 /lib/fq_hashobj.c bug patch: Sure_GetHash() add.
+ver14.7.7 2023/11/30 bug patch: /fq_handler_json/ In case of full or  data is null, processing change. 
+ver14.7.8 2023/12/03 /fqueue.c shmlock name change
+          2023/12/16 /monitor/monitor.c endwin()
+ver14.7.9 2023/12/17 /lib/fq_utl.[ch]
+            bool checkFileSystemSpace( fq_logger_t *l, const char *path, unsigned long long requiredSpace) 
+            /src/fq_handler_json/svr/ : CheckFileSytem()
+            /src/wmonitor/wmonitor.c: Allocated Disk display.
+            /lib/fq_tcp_client_obj.c: add func: checkServerStatus()
+
+ver14.8.0 2023/12/19: bug fq_handler_svr_json.c MSG_LENGHT -> MSG_LENGTH
+							full -> return full : do not retry in server.
+						/lib/fq_protocol.c MSG_LENGHT -> MSG_LENGTH
+					   
+ver14.8.1 2024/01/20: fq_mon_svr.c
+					add a function: scheduledTask() thread.
+

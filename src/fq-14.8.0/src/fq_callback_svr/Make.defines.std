@@ -1,0 +1,5 @@
+CC=gcc
+AR=ar
+FQ_LIB=$(HOME)/fq/lib
+FQ_INC=$(HOME)/fq/include
+LIBS=-lm -lpthread -lrt -lfq

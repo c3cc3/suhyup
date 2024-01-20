@@ -1,0 +1,6 @@
+libfq_la-fq_nonblock.lo: fq_nonblock.c /usr/include/stdc-predef.h \
+ fq_nonblock.h
+
+/usr/include/stdc-predef.h:
+
+fq_nonblock.h:

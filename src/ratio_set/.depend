@@ -1,0 +1,21 @@
+my_conf.o: my_conf.c /home/ums/fq/include/fq_config.h \
+ /home/ums/fq/include/fq_cache.h /home/ums/fq/include/fq_global.h \
+ /home/ums/fq/include/fq_version.h /home/ums/fq/include/fq_types.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_param.h \
+ /home/ums/fq/include/fq_config.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h my_conf.h
+ratio_set.o: ratio_set.c /home/ums/fq/include/fq_tcp_client_obj.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_global.h \
+ /home/ums/fq/include/fq_version.h /home/ums/fq/include/fq_types.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h /home/ums/fq/include/fq_cache.h \
+ /home/ums/fq/include/fq_timer.h /home/ums/fq/include/parson.h \
+ ums_common_conf.h /home/ums/fq/include/fq_config.h my_conf.h
+ums_common_conf.o: ums_common_conf.c /home/ums/fq/include/fq_config.h \
+ /home/ums/fq/include/fq_cache.h /home/ums/fq/include/fq_global.h \
+ /home/ums/fq/include/fq_version.h /home/ums/fq/include/fq_types.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_param.h \
+ /home/ums/fq/include/fq_config.h ums_common_conf.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_common.h \
+ /home/ums/fq/include/config.h /home/ums/fq/include/fq_defs.h

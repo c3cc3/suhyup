@@ -1,0 +1,8 @@
+QPATH = "/home/gwisangchoi/data"
+QNAME = "TST"
+MSGLEN = 4096
+MMAPPING_NUM = 100
+MULTI_NUM = 1000
+DESC = "TST Queue file"
+XA_MODE_ON_OFF = "OFF"
+WAIT_MODE_ON_OFF = "OFF"

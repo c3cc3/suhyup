@@ -1,0 +1,15 @@
+RESP_KIND|RESP_KIND|fixed|40|string|DIST|true
+DONE_DATE|DONE_DATE|cache|0|string|0|true
+DONE_DATE|BILL_DATE|cache|0|string|0|true
+COMP_CODE|COMP_CODE|cache|0|string|0|true
+HISTORY_KEY|HISTORY_KEY|cache|1|string|0|true
+DONE_DATE|SEND_TIME|cache|0|string|0|true
+DONE_DATE|RECV_TIME|cache|0|string|0|true
+MSG_KIND|MSG_KIND|cache|0|string|0|true
+RESULT_GROUP_CODE|RESULT_GROUP_CODE|cache|0|string|0|false
+RESULT_CODE|RESULT_CODE|cache|0|string|0|true
+REASON|REASON|cache|0|string|0|false
+TELECOM_CODE|TELECOM_CODE|cache|0|string|0|false
+CUSTOMER|CUSTOMER|cache|0|string|0|false
+SESSION_ID|SESSION_ID|cache|0|string|0|false
+SESSION_NO|SESSION_NO|cache|0|string|0|false

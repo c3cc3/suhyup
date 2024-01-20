@@ -1,0 +1,20 @@
+#
+# QU(Queue Infomation) read format
+# edit : 2015/06/25
+# editor: Gwisang.Choi
+#########################################################################################
+@OUTPUT_P
+length      4       STR     N       000     N
+Kind		2		STR		N		000		N
+gen_ymd		8		STR		N		000		N
+gen_hms		6		STR		N		000		N
+HostName	64		STR		N		000		N
+QueuePath	128		STR		N		000		N
+QueueName	16		STR		N		000		N
+XA_OnOff	3		STR		N		000		N
+MsgLen		6		STR		N		000		N
+MaxRecCnt	8		STR		N		000		N
+EnSum		10		STR		N		000		N
+DeSum		10		STR		N		000		N
+Diff		10		STR		N		000		N
+dummy		50		STR		N		000		N

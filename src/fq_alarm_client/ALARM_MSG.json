@@ -1,0 +1,8 @@
+{
+    "HOSTNAME": "%cache hostname%",
+    "REQ_DTTM": "%cache req_dttm%",
+    "QPATH": "%cache qpath%",
+    "QNAME": "%cache qname%",
+    "MESSAGE": "%cache q_status_msg%",
+    "MSGLEN":"%cache msglen%"
+}

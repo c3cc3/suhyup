@@ -1,0 +1,14 @@
+set -x
+pkill run_fq_handler.sh
+pkill run_fq_mon_svr.sh
+pkill run_DeleteHash.sh
+pkill run_webgate.sh
+pkill run_dist_real.sh
+#pkill run_dist_bat.sh
+pkill run_fq_alarm_svr.sh
+pkill fq_handler
+pkill fq_mon_svr
+pkill DeleteHash
+pkill webgate
+pkill dist_real
+#pkill dist_bat

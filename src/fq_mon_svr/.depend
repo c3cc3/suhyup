@@ -1,0 +1,38 @@
+fq_mon_svr.o: fq_mon_svr.c /home/ums/fq/include/fqueue.h \
+ /home/ums/fq/include/fq_flock.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_global.h /home/ums/fq/include/fq_version.h \
+ /home/ums/fq/include/fq_types.h /home/ums/fq/include/fq_unixQ.h \
+ /home/ums/fq/include/fq_eventlog.h \
+ /home/ums/fq/include/fq_external_env.h /home/ums/fq/include/fq_monitor.h \
+ /home/ums/fq/include/fq_semaphore.h /home/ums/fq/include/fq_linkedlist.h \
+ /home/ums/fq/include/fq_hashobj.h /home/ums/fq/include/fq_codemap.h \
+ /home/ums/fq/include/fq_cache.h /home/ums/fq/include/fq_heartbeat.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h /home/ums/fq/include/fq_typedef.h \
+ /home/ums/fq/include/fq_conf.h /home/ums/fq/include/fq_manage.h \
+ /home/ums/fq/include/fqueue.h /home/ums/fq/include/parson.h \
+ /home/ums/fq/include/shm_queue.h /home/ums/fq/include/fq_socket.h \
+ /home/ums/fq/include/fq_file_list.h fuser_popen.h \
+ /home/ums/fq/include/fq_manage.h /home/ums/fq/include/parson.h \
+ /home/ums/fq/include/fq_external_env.h /home/ums/fq/include/fq_hashobj.h \
+ fq_mon_svr_conf.h /home/ums/fq/include/fq_config.h ums_common_conf.h \
+ /home/ums/fq/include/fq_gssi.h
+fq_mon_svr_conf.o: fq_mon_svr_conf.c /home/ums/fq/include/fq_config.h \
+ /home/ums/fq/include/fq_cache.h /home/ums/fq/include/fq_global.h \
+ /home/ums/fq/include/fq_version.h /home/ums/fq/include/fq_types.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_param.h \
+ /home/ums/fq/include/fq_config.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h fq_mon_svr_conf.h
+fuser_popen.o: fuser_popen.c /home/ums/fq/include/fq_delimiter_list.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_global.h \
+ /home/ums/fq/include/fq_version.h /home/ums/fq/include/fq_types.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h /home/ums/fq/include/fq_cache.h
+ums_common_conf.o: ums_common_conf.c /home/ums/fq/include/fq_config.h \
+ /home/ums/fq/include/fq_cache.h /home/ums/fq/include/fq_global.h \
+ /home/ums/fq/include/fq_version.h /home/ums/fq/include/fq_types.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_param.h \
+ /home/ums/fq/include/fq_config.h ums_common_conf.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_common.h \
+ /home/ums/fq/include/config.h /home/ums/fq/include/fq_defs.h

@@ -1,0 +1,10 @@
+# 1-th action
+# 2-th local queue path
+# 3-th local queue name
+# 4-th remote queue path
+# 5-th remote queue name
+SEND /home/ums/fq/enmq TST /home/ums/fq/enmq TST1
+SEND /home/ums/fq/enmq LG_SM /home/ums/fq/enmq TST1
+SEND /home/ums/fq/enmq LG_SM /home/ums/fq/enmq TST1
+RECV /home/ums/fq/enmq KT /home/ums/fq/enmq TST1
+RECV /home/ums/fq/enmq RCS /home/ums/fq/enmq TST1
