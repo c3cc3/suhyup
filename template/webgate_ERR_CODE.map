@@ -1,0 +1,4 @@
+0000 "Gateway System ERROR"
+1000 "user request error: JSON format error"
+2000 "Unknown service code"
+3000 "Service function error."
