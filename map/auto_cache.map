@@ -1,0 +1,19 @@
+#1-th: input JSON key
+#2-th: cache key
+#3-th: JSON data type
+#4-th: mandatory flag : Y or N
+#5-th: data length, len > 0 -> check, len == 0 : do not check
+##################################################################
+HISTORY_KEY|HISTORY_KEY|String|Y|0
+#MSG_KIND|MessageKind|String|N|0
+#SETTLE_CODE|SETTLE_CODE|String|Y|1
+#SUB_STORE_NO|SUB_STORE_NO|String|Y|4
+#BANK_GUBUN|BANK_GUBUN|String|Y|1
+#REQUEST_DTTM|REQUEST_DTTM|String|Y|14
+##DIST_Q_DTTM|DIST_Q_DTTM|String|N|0
+#RCV_PHN_NO|RCV_PHN_NO|String|Y|0
+#SND_PHN_NO|SND_PHN_NO|String|Y|0
+#CALLBACK_NO|CALLBACK_NO|String|Y|0
+#GssiFlag|GssiFlag|Boolean|Y|0
+#SEND_MESSAGE|SMS_MESSAGE|String|Y|0
+##OPTION|OPTION|String|N|0

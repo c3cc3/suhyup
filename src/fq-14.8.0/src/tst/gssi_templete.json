@@ -1,0 +1,15 @@
+{
+	// order:  1:name,2:bank,3:age,4:email, 5:sex, 6:address,7:dogname,8:patname */
+  "Name": "%var1%",
+  "Bank": "%var2%",
+  "Age": "%var3%",
+  "Email: "%var4%",
+  "Sex": "%var5%",
+  "Address": "%var6%"
+  "Children": [
+    "KongMyeung",
+    "HyeunMyeung"
+  ],
+  "DogName": "%var7%",
+  "PatName": "%var8%"
+}

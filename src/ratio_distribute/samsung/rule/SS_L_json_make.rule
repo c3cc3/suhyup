@@ -1,0 +1,16 @@
+DATA.HISTORY_KEY|HISTORY_KEY|json|40|string|0|true
+DATA.MSG_KIND|MSG_KIND|json|1|string|0|true
+DATA.MSG_TYPE|MSG_TYPE|json|1|string|0|true
+DATA.SETTLE_CODE|SETTLE_CODE|json|1|string|0|true
+DATA.SUB_STORE_NO|SUB_STORE_NO|json|4|string|0|true
+DATA.BANK_GUBUN|BANK_GUBUN|json|1|string|0|true
+DATA.SETTLE_DUMMY|SETTLE_DUMMY|fixed|26|string|X|false
+DATA.MSG_VER|MSG_VER|fixed|2|string|01|true
+DATA.REQUEST_CO_ID|REQUEST_CO_ID|fixed|2|string|0000012345|true
+DATA.REQUEST_DTTM|REQUEST_DTTM|json|14|string|0|true
+DIST_Q_DTTM|DIST_Q_DTTM|cache|14|string|0|true
+DATA.RCV_PHN_NO|RCV_PHN_NO|json|32|string|0|true
+DATA.SND_PHN_NO|SND_PHN_NO|json|16|string|0|true
+DATA.CALLBACK_NO|CALLBACK_NO|json|32|string|0|true
+DATA.EXTRA|EXTRA|fixed|118|string|X|true
+DATA.SMS_MESSAGE|SMS_MESSAGE|json|200|string|0|true

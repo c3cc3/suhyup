@@ -1,0 +1,7 @@
+{
+    "Title": "Error Report",
+	"RequestSveCode": "%cache svc_code%",
+    "DateTime": %cache date_time%",
+	"result_code": "%cache err_code%",
+	"err_message": "%cache err_message%"
+}

@@ -1,0 +1,13 @@
+# SMS
+K|SS|/ums/fq/rule/SS_K_json_make.rule
+L|SS|/ums/fq/rule/SS_L_json_make.rule
+# LMS
+K|SL|/ums/fq/rule/SL_K_json_make.rule
+L|SL|/ums/fq/rule/SL_L_json_make.rule
+# MMS
+K|SM|/ums/fq/rule/SM_K_json_make.rule
+L|SM|/ums/fq/rule/SM_L_json_make.rule
+# KAKAO
+B|KA|/ums/fq/rule/KA_B_json_make.rule
+B|CL|/ums/fq/rule/CL_B_json_make.rule
+P|PU|/ums/fq/rule/PU_P_json_make.rule

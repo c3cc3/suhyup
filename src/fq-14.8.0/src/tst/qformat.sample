@@ -1,0 +1,23 @@
+#
+# deQ_agent 공통부 정의 파일
+# edit : 2011/09/14
+# editor: 
+# samples
+#########################################################################################
+# field name            length  source
+#                       164-total bytes
+##########################################################################################
+length             		8       FIXED    "00000169"    		STR     N       131 0 0
+data_tp               	1       FIXED    "T"      			STR     N       000 0 0
+uuid               		32      SYS_UUID "#"    			STR     N       000 0 0
+gen_ymd					8		SYS_DATE "#"				STR		N		000 0 0
+gen_hms					13		CACHE    "#"				STR		N		000 0 0
+elps_hms				13		FIXED    "20150616.1234"	STR		N		000 0 0
+ch_tp					2		STREAM   "#"				STR		N		000 30 2
+io_tp					1		FIXED  	 "I"				STR		N		000 0 0
+node_id					15		SYS_HOSTID  "#"				STR		N		000 0 0
+cust_id					21		STREAM   "#"				STR		N		000 40 9 
+NAME					10		POST		"#"				STR		N		000 0 0
+AGE						3		POST	"#"					STR		N		000 0 0
+dummy					50		FIXED    "#"				STR		N		000 0 0 
+#########################################################################################

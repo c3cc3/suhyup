@@ -1,0 +1,15 @@
+@OUTPUT_P
+name      	8       STR     N       000     N
+address		10		STR		N		000		N
+sex			1		STR		N		000		N
+ADDR_CNT	2		STR		N		000		N
+ACCT_CNT	2		STR		N		000		N
+@OUTPUT_BLOCK_ADDRLIST #REPEAT="ADDR_CNT"
+addr		15		STR		N		000		N
+port		5		STR		N		000		N
+@OUTPUT_BLOCK_ACCTLIST #REPEAT="ACCT_CNT"
+acctno		15		STR		N		000		N
+balance		10		STR		N		000		N
+@OUTPUT_P
+date		8		STR		N		000		N
+time		6		STR		N		000		N

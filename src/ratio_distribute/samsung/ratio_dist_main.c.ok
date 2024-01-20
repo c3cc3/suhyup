@@ -1,0 +1,1537 @@
+/*
+** input: 수집서버가 넣어 놓은 발송메시지를 꺼내어
+** 통신사 분배비율에 따라 분배하여 해당 큐에 넣는다.
+** ratio_dist_main.c
+*/
+#include <stdio.h>
+#include <stdbool.h>
+#include <libgen.h>
+
+#include "fq_common.h"
+#include "fq_linkedlist.h"
+#include "fq_delimiter_list.h"
+#include "fq_ratio_distribute.h"
+
+#include "fq_codemap.h"
+#include "fqueue.h"
+#include "fq_file_list.h"
+#include "ums_common_conf.h"
+#include "ratio_dist_conf.h"
+#include "queue_ctl_lib.h"
+#include "fq_timer.h"
+#include "fq_hashobj.h"
+#include "fq_tci.h"
+#include "fq_cache.h"
+#include "fq_conf.h"
+#include "fq_gssi.h"
+#include "fq_mem.h"
+
+#include "parson.h"
+#include "my_linkedlist.h"
+
+#define SEQ_CHECK_ID_MAX_LEN (40)
+
+hashmap_obj_t *seq_check_hash_obj=NULL;
+char seq_check_id[SEQ_CHECK_ID_MAX_LEN+1];
+
+// static void print_aformat_stdout(aformat_t *w);
+bool make_serialized_json_by_rule_local( fq_logger_t *l, linkedlist_t *json_tci_ll, cache_t *cache, JSON_Object *in_json, char **dst, bool pretty_flag );
+static bool json_get_value_malloc( fq_logger_t *l, JSON_Object *ums_JSONObject, char *key, char *datatype, char **dst, long *dst_len);
+static bool json_auto_caching( fq_logger_t *l, cache_t *cache_short_for_gssi, JSON_Object *ums_JSONObject, json_key_datatype_t *tmp);
+static bool update_channel_ratio(fq_logger_t *l, ctrl_msg_t *ctrl_msg, linkedlist_t *channel_co_ratio_obj_ll);
+static bool down_channel_ratio(fq_logger_t *l, ctrl_msg_t *ctrl_msg, linkedlist_t *channel_co_ratio_obj_ll);
+static bool json_parsing_caching_and_SSIP( fq_logger_t *l, JSON_Value **in_json, JSON_Object **root,  ratio_dist_conf_t *my_conf, linkedlist_t *json_key_datatype_obj_ll, unsigned char *ums_msg, cache_t *cache_short_for_gssi, char *channel, char *seq_check_id);
+static bool TCI_parsing_caching_and_SSIP( fq_logger_t *l, ratio_dist_conf_t *my_conf, aformat_t *a,  unsigned char *ums_msg, cache_t *cache_short_for_gssi, char *channel, size_t ums_msg_len);
+
+static bool make_TCI_send_message_and_enQ( fq_logger_t *l, ratio_dist_conf_t *my_conf, fqueue_obj_t *this_q,  fqueue_obj_t *deq_obj, char *unlink_filename, long l_seq, char co_initial, linkedlist_t *co_qformat_obj_ll, codemap_t *t, aformat_t *a);
+static bool make_JSON_send_message_and_enQ( fq_logger_t *l, JSON_Object *in_json_obj, char *key, char *channel, unsigned char *SSIP_result, cache_t *c, ratio_dist_conf_t *my_conf, fqueue_obj_t *this_q, fqueue_obj_t *deq_obj, char *unlink_filename, long l_seq,  char co_initial, linkedlist_t *co_json_rule_obj_ll);
+static bool forward_channel( fq_logger_t *l, aformat_t *a, ll_node_t *channel_queue_map_node, unsigned char *ums_msg, size_t ums_msg_len, fqueue_obj_t *deq_obj, char *unlink_filename, long l_seq);
+
+static fqueue_obj_t *Select_a_queue_obj_and_co_initial_by_least_usage( fq_logger_t *l, char *channel, linkedlist_t *channel_co_queue_obj_ll, codemap_t *queue_co_initial_codemap, char *key, char *co_initial);
+static fqueue_obj_t *Select_a_queue_obj_and_co_initial_by_ratio( fq_logger_t *l, char *channel, linkedlist_t *channel_co_ratio_obj_ll, linkedlist_t *channel_co_queue_obj_ll, codemap_t *queue_co_initial_codemap, char *key, char *co_initial);
+static fqueue_obj_t *Select_a_queue_obj_by_co_initial(fq_logger_t *l, char *channel, char co_initial,  linkedlist_t *channel_co_queue_obj_ll);
+static bool is_guarantee_user( fq_logger_t *l, hashmap_obj_t *seq_check_hash_obj, char *seq_check_id, char *co_in_hash );
+
+int main( int ac, char **av)
+{
+	FILELIST	*this_entry = NULL;
+
+	char SSIP_result_for_TCI[8192];
+
+	/* cache short */
+	cache_t *cache_short_for_gssi;
+
+	/* touch timer */
+	double passed_time;
+
+	/* ums common config */
+	ums_common_conf_t *cm_conf = NULL;
+
+	/* my_config */
+	ratio_dist_conf_t	*my_conf=NULL;
+	char *errmsg=NULL;
+
+	/* logging */
+	fq_logger_t *l=NULL;
+	char log_pathfile[256];
+
+	/* common */
+	int rc;
+	bool tf;
+
+	/* dequeue object */
+	fqueue_obj_t *deq_obj=NULL;
+	fqueue_obj_t *ctrl_obj=NULL;
+	fqueue_obj_t *del_hash_q_obj=NULL;
+
+	aformat_t *a=NULL;
+	// qformat_t *q=NULL;
+
+
+	if( ac != 2 ) {
+		fprintf(stderr, "Usage: $ %s [your config file] <enter>\n", av[0]);
+		return 0;
+	}
+
+
+
+
+	if(Load_ums_common_conf(&cm_conf, &errmsg) == false) {
+		fprintf(stderr, "Load_ums_common_conf() error. reason='%s'\n", errmsg);
+		return(-1);
+	}	
+
+	if(LoadConf(av[1], &my_conf, &errmsg) == false) {
+		fprintf(stderr, "LoadMyConf('%s') error. reason='%s'\n", av[1], errmsg);
+		return(-1);
+	}
+
+	sprintf(log_pathfile, "%s/%s", cm_conf->ums_common_log_path, my_conf->log_filename);
+	rc = fq_open_file_logger(&l, log_pathfile, my_conf->i_log_level);
+	CHECK(rc==TRUE);
+	fprintf(stdout, "log file: '%s'\n", log_pathfile);
+
+	if( FQ_IS_ERROR_LEVEL(l) ) {
+		fclose(stdout);
+	}
+
+	fq_log(l, FQ_LOG_INFO, "ums common conf loading ok.");
+	fq_log(l, FQ_LOG_INFO, "ums my conf loading ok.");
+
+
+	tf = Open_takeout_Q(l, my_conf, &deq_obj);
+	CHECK(tf);
+	fq_log(l, FQ_LOG_INFO, "ums takeout Queue Open ok.");
+
+	tf = Open_del_hash_Q( l, my_conf, &del_hash_q_obj);
+	CHECK(tf);
+	fq_log(l, FQ_LOG_INFO, "del hash takeout Queue Open ok.");
+
+	tf = Open_control_Q(l, my_conf, &ctrl_obj);
+	CHECK(tf);
+	fq_log(l, FQ_LOG_INFO, "ums control Queue Open ok.");
+
+	/* reading protocol */
+	/* ums standard stream format */
+	a = new_aformat( my_conf->ums_protocol_format_file, &errmsg);
+	CHECK(a);
+	fq_log(l, FQ_LOG_INFO, "ums format file Open ok.");
+	
+	rc = read_aformat(a, my_conf->ums_protocol_format_file, &errmsg);
+	CHECK( rc >= 0 );
+	fq_log(l, FQ_LOG_INFO, "ums format file read ok.");
+
+
+	hashmap_obj_t *hash_obj=NULL;
+	/* For creating, Use /utl/ManageHashMap command */
+	rc = OpenHashMapFiles(l, "/home/ums/fq/hash", "ums", &hash_obj);
+	CHECK(rc==TRUE);
+	fq_log(l, FQ_LOG_INFO, "ums HashMap open ok.");
+
+	/* For creating, Use /utl/ManageHashMap command */
+	rc = OpenHashMapFiles(l, "/home/ums/fq/hash", "history", &seq_check_hash_obj);
+	CHECK(rc==TRUE);
+	fq_log(l, FQ_LOG_INFO, "ums seq check HashMap open ok.");
+
+	in_params_map_list_t in;
+	out_params_map_list_t ctx;
+	tf = Load_map_and_linkedlist( l, my_conf, &in, &ctx);
+	CHECK(tf);
+
+	pid_t	mypid = getpid();
+
+	if( my_conf->fqpm_use_flag == true ) {
+		tf = check_duplicate_me_on_fq_framework( l, av[1]);
+		CHECK(tf);
+		fq_log(l, FQ_LOG_INFO, "process dup checking on framework ok.");
+
+		tf = regist_me_on_fq_framework(l, NULL, mypid, true, 60 ); // NULL : use env=FQ_DATA_PATH
+		CHECK(tf);
+		fq_log(l, FQ_LOG_INFO, "process regist on framework ok.");
+	}
+
+	fprintf(stdout, "Gateway Protocol is [%s].\n", my_conf->ums_gw_protocol);
+	
+	fprintf(stdout, "This program will be logging to '%s'. pid='%d'.\n", log_pathfile, mypid);
+	fq_log(l, FQ_LOG_EMERG, "Program(%s) start.\n", av[0]);
+
+
+	/* It have to upgrade by control working when order is arrived at ControlQ. */
+	start_timer();
+	while(1) {
+		cache_short_for_gssi = cache_new('S', "Short term cache");
+
+		fq_log(l, FQ_LOG_INFO, "We will send distributor alarm message to ADMIN(%s)", my_conf->admin_phone_no);
+		cache_update(cache_short_for_gssi, "ADMIN_PHONE_NO", my_conf->admin_phone_no, 0);
+
+		JSON_Value *in_json = NULL;
+		JSON_Object *root = NULL;
+
+		char date[9], time[7], sz_current_time[15];
+		get_time(date, time);
+		sprintf(sz_current_time, "%s%s", date, time);	
+		cache_update(cache_short_for_gssi, "DIST_CURRENT_TIME", sz_current_time, 0);
+
+		ctrl_msg_t	*ctrl_msg=NULL;
+		rc = takeout_ctrl_msg_from_Q(l, my_conf, ctrl_obj, &ctrl_msg);
+		char channel[3];
+		
+		if( rc > 0 ) {
+			if( ctrl_msg->cmd == NEW_RATIO ) { /* It is transfered by from manager or monitor */
+				rc = update_channel_ratio(l, ctrl_msg, ctx.channel_co_ratio_obj_ll);
+				CHECK(rc);
+			}
+			else if( ctrl_msg->cmd == CO_DOWN ) {
+				rc = down_channel_ratio(l, ctrl_msg, ctx.channel_co_ratio_obj_ll);
+			}
+			else if( ctrl_msg->cmd == PROC_STOP) {
+				fprintf(stdout, "Takeout PROC_STOP from control Q. Good bye...\n");
+				fq_log(l, FQ_LOG_EMERG, "Takeout PROC_STOP from control Q.");
+				fq_log(l, FQ_LOG_EMERG, "\t- Takeout cmd: %d." , ctrl_msg->cmd);
+				exit(0);
+			}
+			else {
+				fq_log(l, FQ_LOG_ERROR, "Undefined CMD: %s.", ctrl_msg->cmd);
+			}
+		}
+		else if( rc < 0 ) {
+			if( rc == MANAGER_STOP_RETURN_VALUE ) { // -99
+				fprintf( stderr, "Manager stop!!! rc=[%d]\n", rc);
+				fq_log(l, FQ_LOG_EMERG, "[%s] queue is Manager stop.", deq_obj->qname);
+				sleep(1);
+				continue;
+			}
+
+			fq_log(l, FQ_LOG_EMERG, "Conrol Q takeout error.: %s,.%s", 
+				ctrl_obj->path,  ctrl_obj->qname );
+			return 0;
+		}
+		else { // empty
+			fq_log(l, FQ_LOG_INFO, "There is no ctrl_msg.");
+		}
+
+		if(ctrl_msg) SAFE_FREE(ctrl_msg);
+
+		if( my_conf->working_time_use_flag == true ) {
+			bool tf;
+			tf = is_working_time(l, my_conf->working_time_from, my_conf->working_time_to); /* 금일 08:00:00 ~ 22:59:59 발송정지 */
+			if( tf == false ) {
+				fq_log(l, FQ_LOG_INFO, "It is not working time.");
+				sleep(1);	
+				continue;
+			}
+		}
+
+		int rc;
+		// ums_msg_t	*ums_msg=NULL;
+		unsigned char  *ums_msg = NULL;
+		char	*unlink_filename = NULL;
+		long	l_seq;
+		// rc = takeout_ums_msg_from_Q(l, my_conf, deq_obj, &ums_msg, &unlink_filename, &l_seq);
+		rc = takeout_uchar_msg_from_Q(l, my_conf, deq_obj, &ums_msg, &unlink_filename, &l_seq);
+		if(rc < 0) { /* fatal error */
+			if( rc == MANAGER_STOP_RETURN_VALUE ) { // -99
+				fprintf(stderr, "Manager stop!!! rc=[%d]\n", rc);
+				fq_log(l, FQ_LOG_EMERG, "[%s] queue is Manager stop.", deq_obj->qname);
+				sleep(1);
+				continue;
+			}
+			break;
+		} 
+		else if( rc == 0 ) { /* queue is empty */
+			passed_time = end_timer();
+			if( passed_time > 3.0 ) {
+				if( my_conf->fqpm_use_flag == true ) {
+					touch_me_on_fq_framework( l, NULL, mypid );
+				}
+				start_timer();
+			}
+
+			sleep(1);
+			continue;
+		}
+		else {
+			fq_log(l, FQ_LOG_INFO, "We take out a message. rc = [%d]", rc);
+		}
+
+		char SSIP_result[8192];
+		int ums_msg_len = rc;
+
+		fq_log(l, FQ_LOG_INFO, "From G/W ums_msg rc(length)=[%d],", rc);
+		fq_log(l, FQ_LOG_INFO, "[%s],", ums_msg);
+		fq_log(l, FQ_LOG_INFO, "From G/W: msglen=[%d]\n, msg='%s'", rc, ums_msg);
+
+		fprintf(stdout, "Current UMS protocol(config): %s\n", my_conf->ums_gw_protocol );
+
+		//commit_Q(l, deq_obj, unlink_filename, l_seq);
+		// here: check ok.
+		if( STRCMP( my_conf->ums_gw_protocol, "JSON") == 0 )  {
+			bool tf;
+			fprintf( stdout, "JSON protocol with G/W.\n");
+			
+			tf = json_parsing_caching_and_SSIP( l, &in_json, &root,  my_conf, ctx.json_key_datatype_obj_ll,  ums_msg, cache_short_for_gssi, channel, seq_check_id);
+			if( tf == false ) {
+				commit_Q(l, deq_obj, unlink_filename, l_seq);
+				goto SKIP;
+			} 
+			fq_log(l, FQ_LOG_INFO, "channel=[%s], seq_check_id=[%s].", channel, seq_check_id);
+			CHECK(in_json);
+			CHECK(root);
+		}
+		else if(  STRCMP( my_conf->ums_gw_protocol, "TCI") == 0 ) {
+			fprintf( stdout, "TCI protocol with G/W.\n");
+
+			bool tf;
+			tf = TCI_parsing_caching_and_SSIP( l, my_conf, a,  ums_msg, cache_short_for_gssi, channel, rc);
+			if( tf == false ) {
+				commit_Q(l, deq_obj, unlink_filename, l_seq);
+				goto SKIP;
+			} 
+		} 
+		else {
+			fprintf( stderr, "Unsupported UMS protocol.\n");
+			return(0);
+		}
+
+		// here: check ok.
+		// commit_Q(l, deq_obj, unlink_filename, l_seq);
+		// Notice!!!
+		// Up to this point, the memory check has been completed.
+
+
+		// get_avalue(a, "channel", channel);
+		ll_node_t *channel_queue_map_node=NULL;
+		channel_queue_map_node = linkedlist_find(ctx.channel_queue_obj_ll, channel);
+
+		if( channel_queue_map_node ) { /* found: It's means forward processing.  */
+			fprintf( stdout, "Forword processing. [%s]\n", channel);
+
+			bool tf;
+			tf = forward_channel( l, a, channel_queue_map_node, ums_msg, ums_msg_len, deq_obj, unlink_filename, l_seq);
+			CHECK(tf);
+
+			passed_time = end_timer();
+			if( passed_time > 3.0) {
+				if( my_conf->fqpm_use_flag == true ) {
+					touch_me_on_fq_framework( l, NULL, mypid );
+				}
+				start_timer();
+			}
+		}
+		else { /* It is a channel to need ratio distribution */
+			fqueue_obj_t *this_q = NULL; /* selected queue object */
+			char co_in_hash;
+			char co_initial;
+			char key[5]; // channel and co_initial
+
+			if( is_guarantee_user( l, seq_check_hash_obj, seq_check_id, &co_in_hash ) == true ) {
+				co_initial = co_in_hash;
+				this_q = Select_a_queue_obj_by_co_initial(l, channel, co_initial, ctx.channel_co_queue_obj_ll);
+
+				if( queue_is_warning( l, this_q, my_conf->warning_threshold) ) {
+					this_q = Select_a_queue_obj_and_co_initial_by_least_usage(l, channel, ctx.channel_co_queue_obj_ll, ctx.queue_co_initial_codemap, key, &co_initial);
+					CHECK(this_q);
+
+					fq_log(l, FQ_LOG_INFO, "[%s]/[%s] is selected.", this_q->path, this_q->qname);
+
+					/* Put seq_check_id to hash */
+					char str_co_initial[2];
+					sprintf(str_co_initial, "%c", co_initial);
+					rc = PutHash(l, seq_check_hash_obj, seq_check_id, str_co_initial);
+					CHECK(rc == TRUE);
+
+					rc = uchar_enQ(l, seq_check_id, sizeof(seq_check_id), del_hash_q_obj);
+					CHECK(rc > 0 );
+				}
+				else {
+					fq_log(l, FQ_LOG_INFO, "Current Usaage of [%c] is [%f].", co_initial, this_q->on_get_usage(l, this_q));
+					fprintf(stdout, "Current Usaage of [%c] is [%f].\n", co_initial, this_q->on_get_usage(l, this_q));
+				}
+
+				ll_node_t *channel_co_ratio_obj_map_node=NULL;
+				channel_co_ratio_obj_map_node = linkedlist_find(ctx.channel_co_ratio_obj_ll, channel);
+				channel_ratio_obj_t *this = (channel_ratio_obj_t *) channel_co_ratio_obj_map_node->value;
+				ratio_obj_t	*ratio_obj = this->ratio_obj;
+
+				float current_co_ratio = get_co_ratio_by_co_initial(l, ratio_obj , co_initial);
+				fprintf(stdout, "current ratio of [%c] is [%f]\n", co_initial, current_co_ratio);
+			}
+			else {
+				/* Where should I send it to get there the fastest? */
+				if( strcmp( my_conf->distribute_type, "LEAST_USAGE") == 0 ) {
+					fq_log(l, FQ_LOG_INFO, "Send messages to the queue with the least usage.");
+
+					this_q = Select_a_queue_obj_and_co_initial_by_least_usage(l, channel, ctx.channel_co_queue_obj_ll, ctx.queue_co_initial_codemap, key, &co_initial);
+					CHECK(this_q);
+
+					fq_log(l, FQ_LOG_INFO, "[%s]/[%s] is selected.", this_q->path, this_q->qname);
+
+					/* Put seq_check_id to hash */
+					char str_co_initial[2];
+					sprintf(str_co_initial, "%c", co_initial);
+					rc = PutHash(l, seq_check_hash_obj, seq_check_id, str_co_initial);
+					CHECK(rc == TRUE);
+					rc = uchar_enQ(l, seq_check_id, sizeof(seq_check_id), del_hash_q_obj);
+					CHECK(rc > 0 );
+
+				}
+				else if( strcmp( my_conf->distribute_type, "RATIO") == 0 ) {
+					fq_log(l, FQ_LOG_INFO, "Select a queue based on the distribution ratio.");
+
+					this_q = Select_a_queue_obj_and_co_initial_by_ratio(l, channel, ctx.channel_co_ratio_obj_ll, ctx.channel_co_queue_obj_ll,  ctx.queue_co_initial_codemap, key, &co_initial);
+
+					if( !this_q ) {
+						fq_log(l, FQ_LOG_ERROR, "I haven't found a suitable queue for a channel(%s).", channel);
+						commit_Q(l, deq_obj, unlink_filename, l_seq);
+						goto SKIP;
+					}
+					fq_log(l, FQ_LOG_INFO, "[%s]/[%s] is selected.", this_q->path, this_q->qname);
+					// CHECK(this_q);
+
+					if( queue_is_warning( l, this_q, my_conf->warning_threshold) ) {
+						fq_log(l, FQ_LOG_INFO, "The current state has crossed the threshold.(  my_conf->warning_threshold = %f.",  my_conf->warning_threshold);
+						this_q = Select_a_queue_obj_and_co_initial_by_least_usage(l, channel, ctx.channel_co_queue_obj_ll, ctx.queue_co_initial_codemap, key, &co_initial);
+						CHECK(this_q);
+						fq_log(l, FQ_LOG_INFO, "The selected queue[%s] is in a healthy state.", this_q->qname);
+					}
+					else {
+						fprintf(stdout, "We selected a queue[%s] by ratio.\n", this_q->qname);
+					}
+					/* Put seq_check_id to hash */
+					char str_co_initial[2];
+					sprintf(str_co_initial, "%c", co_initial);
+					rc = PutHash(l, seq_check_hash_obj, seq_check_id, str_co_initial);
+					CHECK(rc == TRUE); // hash table is full. There is no space for new key.
+					rc = uchar_enQ(l, seq_check_id, sizeof(seq_check_id), del_hash_q_obj);
+					CHECK(rc > 0 );
+				}
+				else {
+					fprintf(stderr, "[%s] is undefined distribute type.( available type is LEAST_USAGE or RATIO.\n",  my_conf->distribute_type);
+					fq_log(l, FQ_LOG_ERROR, "[%s] is undefined distribute type.( available type is LEAST_USAGE or RATIO. ",  my_conf->distribute_type);
+					return 0;
+				}
+			}
+
+			char date[9], time[7];
+			get_time(date, time);
+			char send_time[16];
+			sprintf(send_time, "%s%s", date, time);
+			cache_update(cache_short_for_gssi, "senddate", send_time, 0);
+			
+			if( STRCMP(my_conf->ums_gw_protocol, "TCI") == 0 ) {
+				fprintf( stdout, "Make a stream message for output by TCI and en queue.\n");
+				
+				bool tf;
+				tf = make_TCI_send_message_and_enQ( l, my_conf, this_q, deq_obj, unlink_filename, l_seq, co_initial, ctx.co_qformat_obj_ll, ctx.t, a);
+				CHECK(tf);
+
+				passed_time = end_timer();
+				if( passed_time > 3.0) {
+					if( my_conf->fqpm_use_flag == true ) {
+						touch_me_on_fq_framework( l, NULL, mypid );
+					}
+					start_timer();
+				}
+			}
+			else if( STRCMP(my_conf->ums_gw_protocol, "JSON") == 0 )  {
+				bool tf;
+
+				tf = make_JSON_send_message_and_enQ( l, root, key, channel,  SSIP_result, cache_short_for_gssi, my_conf, this_q, deq_obj, unlink_filename, l_seq, co_initial, ctx.co_json_rule_obj_ll);
+				CHECK(tf);
+
+				passed_time = end_timer();
+				if( passed_time > 3.0) {
+					if( my_conf->fqpm_use_flag == true ) {
+						touch_me_on_fq_framework( l, NULL, mypid );
+					}
+					start_timer();
+				}
+			}
+			else {
+				printf("Unsupported Protocol.\n");
+				return 0;
+			}
+
+			
+		}
+SKIP:
+	
+		// free data stream
+		if(a->data) {
+			free(a->data);
+			a->data = NULL;
+		}
+		// free each values
+		if(a) free_aformat_values(&a);
+
+		// free short cache
+		cache_free(&a->cache_short);
+		cache_free(&cache_short_for_gssi);
+
+		FREE(ums_msg);
+
+		if( in_json ) json_value_free(in_json);
+
+	} /* while end */
+
+
+	if(a) free_aformat(&a);
+
+	// if(q) free_qformat(&q);
+	if(ctx.channel_co_queue_obj_ll) linkedlist_free(&ctx.channel_co_queue_obj_ll);
+	if(ctx.channel_queue_obj_ll) linkedlist_free(&ctx.channel_queue_obj_ll);
+	if(ctx.channel_co_ratio_obj_ll) linkedlist_free(&ctx.channel_co_ratio_obj_ll);
+
+	rc = CloseHashMapFiles(l, &hash_obj);
+    CHECK(rc==TRUE);
+
+	rc = CloseHashMapFiles(l, &seq_check_hash_obj);
+    CHECK(rc==TRUE);
+
+	// close_ratio_distributor(l, &obj);
+
+	return 0;
+}
+
+
+/* you must free dst pointer after using */
+static bool json_get_value_malloc( fq_logger_t *l, JSON_Object *ums_JSONObject, char *json_key, char *datatype, char **dst, long *dst_len)
+{
+	char buffer[8192];
+
+	char *p=NULL;
+	p = strstr(json_key, ".");
+
+	memset(buffer, 0x00, sizeof(buffer));
+
+	if(strcmp( datatype, "String") == 0 ) {
+		if( !p ) { 
+			sprintf(buffer, "%s", json_object_get_string(ums_JSONObject, json_key));
+		}
+		else {
+			sprintf(buffer, "%s", json_object_dotget_string(ums_JSONObject, json_key)); 
+		}
+		*dst_len = strlen(buffer);
+		*dst = strdup(buffer);
+	}
+	else if(strcmp( datatype, "Number") == 0 ) {
+		if( !p ) { 
+			sprintf(buffer, "%f", json_object_get_number(ums_JSONObject, json_key));
+		}
+		else {
+			sprintf(buffer, "%f", json_object_dotget_number(ums_JSONObject, json_key));
+		}
+		*dst = strdup(buffer);
+	}
+	else if(strcmp( datatype, "Boolean") == 0 ) {
+		if( !p ) { 
+			sprintf(buffer, "%d", json_object_get_boolean(ums_JSONObject, json_key));
+		}
+		else {
+			sprintf(buffer, "%d", json_object_dotget_boolean(ums_JSONObject, json_key));
+		}
+		*dst = strdup(buffer);
+	}
+	else {
+		return(false);
+	}
+	
+	return true;
+}
+	
+static bool json_auto_caching( fq_logger_t *l, cache_t *cache_short_for_gssi, JSON_Object *ums_JSONObject, json_key_datatype_t *t)
+{
+	char *dst = NULL;
+	long dst_len=0L;
+
+	// printf("auto caching: key=[%s] , mandatory=[%d], length=[%d]\n", t->json_key, t->mandatory, t->length);
+
+	if( json_get_value_malloc( l, ums_JSONObject, t->json_key, t->datatype, &dst, &dst_len) ) {
+
+		// fq_log(l, FQ_LOG_DEBUG, "dst_len = [%ld], dst[0] = [%d]", dst_len, dst[0]);
+		// printf("\t- dst_len = [%ld], dst = [%s]\n", dst_len, dst);
+
+		// if( (mandatory == true) && (dst[0]==0 || dst[0] == 40) ) {
+		if(  dst[0] == 40 && t->mandatory ) {
+			fq_log(l, FQ_LOG_ERROR, "[%s] is mandatory.", t->json_key);
+			fprintf(stderr, "[%s] is mandatory.\n", t->json_key);
+			return(false);
+		} 
+		else {
+			if( t->length != 0 ) {
+				int len = strlen(dst);
+
+				if( t->length != len ) {
+					fq_log(l, FQ_LOG_ERROR, "lengh error.  key=[%s] value=[%s], rule:[%d] , input=[%d].", 
+						 t->json_key, dst, t->length, len);
+					return(false);
+				}
+			}
+			cache_update(cache_short_for_gssi, t->cache_key, dst, 0);
+			fq_log(l, FQ_LOG_INFO, "caching: key='%s', value='%s'.", t->cache_key, dst);
+		}
+	}
+	else {
+		fq_log(l, FQ_LOG_ERROR, "Unsupport DataType. Check your auto cache mapfile.");
+		fprintf(stderr, "Unsupport DataType. Check your auto cache mapfile \n");
+		return(false);
+	}
+	SAFE_FREE(dst);
+	return true;
+}
+
+static bool update_channel_ratio(fq_logger_t *l, ctrl_msg_t *ctrl_msg, linkedlist_t *channel_co_ratio_obj_ll)
+{
+	CHECK(ctrl_msg);
+	CHECK(channel_co_ratio_obj_ll);
+
+	fq_log(l, FQ_LOG_EMERG, "Takeout new_ratio from control Q.");
+	fq_log(l, FQ_LOG_EMERG, "\t- Takeout cmd: %d." , ctrl_msg->cmd);
+	fq_log(l, FQ_LOG_EMERG, "\t- Takeout channel: %s." , ctrl_msg->channel);
+	fq_log(l, FQ_LOG_EMERG, "\t- Takeout new_ratio: '%s'.", ctrl_msg->new_ratio_string);
+	
+	ll_node_t *channel_co_ratio_obj_map_node=NULL;
+	channel_co_ratio_obj_map_node = linkedlist_find(channel_co_ratio_obj_ll, ctrl_msg->channel);
+
+	if( channel_co_ratio_obj_map_node ) { /* found */
+		char *new_ratio_src = ctrl_msg->new_ratio_string;
+		char *new_rand_seed_string = NULL;
+
+		/* We will forward it to media  directly */
+		channel_ratio_obj_t *this = (channel_ratio_obj_t *) channel_co_ratio_obj_map_node->value;
+		ratio_obj_t	*ratio_obj = this->ratio_obj;
+		// fprintf(stdout, "Selected a ratio object. It's string: '%s'.\n", ratio_obj->ratio_string);
+		fq_log(l, FQ_LOG_INFO,  "Selected a ratio object. It's string: '%s'.", 
+			ratio_obj->ratio_string);
+
+		char  delimiter = ',';
+		char  sub_delimiter = ':';
+
+		new_rand_seed_string  = make_seed_string(l, ratio_obj, new_ratio_src, delimiter, sub_delimiter );
+		if( new_rand_seed_string ) {
+			ratio_obj->on_change_ratio_seed(l, ratio_obj, new_rand_seed_string);
+
+			fprintf(stdout, "ratio changed: %s\n", new_ratio_src);
+			fq_log(l, FQ_LOG_EMERG, "ratio changed: %s.", new_ratio_src);
+		}
+		else {
+			fprintf(stderr, "make_seed_string() error\n");
+			return 0;
+		}
+		FREE(new_rand_seed_string);
+	}
+	else {
+		fq_log(l, FQ_LOG_ERROR, "Undefined channel: We can't found a node of [%s] in the linkedlist. We will throw it.", ctrl_msg->channel);
+		fprintf( stderr, "Undefined channel: We can't found a node of [%s] in the linkedlist. We will throw it.\n", ctrl_msg->channel);
+	}
+
+	return true;
+}
+static bool down_channel_ratio(fq_logger_t *l, ctrl_msg_t *ctrl_msg, linkedlist_t *channel_co_ratio_obj_ll)
+{
+	CHECK(ctrl_msg);
+	CHECK(channel_co_ratio_obj_ll);
+
+	fq_log(l, FQ_LOG_EMERG, "Takeout CO_DOWN from control Q.");
+	fq_log(l, FQ_LOG_EMERG, "\t- Takeout cmd: %d." , ctrl_msg->cmd);
+	fq_log(l, FQ_LOG_EMERG, "\t- Takeout channel: %s." , ctrl_msg->channel);
+	fq_log(l, FQ_LOG_EMERG, "\t- Takeout co_name: '%s'.", ctrl_msg->co_name);
+
+	ll_node_t *channel_co_ratio_obj_map_node=NULL;
+	channel_co_ratio_obj_map_node = linkedlist_find(channel_co_ratio_obj_ll, ctrl_msg->channel);
+
+	if( channel_co_ratio_obj_map_node ) { /* found */
+		channel_ratio_obj_t *this = (channel_ratio_obj_t *) channel_co_ratio_obj_map_node->value;
+		ratio_obj_t	*ratio_obj = this->ratio_obj;
+
+		fq_log(l, FQ_LOG_EMERG, "\t- Current ratio_string: '%s'.", ratio_obj->ratio_string);
+		// fprintf( stdout, "Selected a ratio object. It's ratio_string: '%s'.\n", ratio_obj->ratio_string);
+		co_down_new_ratio( l, ratio_obj, ctrl_msg->co_name[0]);
+		
+		fq_log(l, FQ_LOG_EMERG, "\t- Changed new ratio_string: '%s'.", ratio_obj->ratio_string);
+		fprintf( stdout, "Chaned new ratio_string: '%s'.\n", ratio_obj->ratio_string);
+	}
+	else {
+		fq_log(l, FQ_LOG_ERROR, "Undefined channel: We can't found a node of [%s] in the linkedlist. We will throw it.", ctrl_msg->channel);
+		fprintf( stderr, "Undefined channel: We can't found a node of [%s] in the linkedlist. We will throw it.\n", ctrl_msg->channel);
+	}
+
+	return true;
+}
+static bool json_parsing_caching_and_SSIP( fq_logger_t *l, JSON_Value **in_json, JSON_Object **root,  ratio_dist_conf_t *my_conf, linkedlist_t *json_key_datatype_obj_ll, unsigned char *ums_msg, cache_t *cache_short_for_gssi, char *channel, char *seq_check_id)
+{
+	FQ_TRACE_ENTER(l);
+
+	/* Make a JSON RootValue with  a UMS message */
+
+	*in_json = json_parse_string(ums_msg);
+	if( !*in_json ) { // We throw it.
+		fprintf(stderr, "illegal json format.\n");
+		fq_log(l, FQ_LOG_ERROR, "illegal json format. We throw it.\n");
+		FQ_TRACE_EXIT(l);
+		return false;
+		// commit_Q(l, deq_obj, unlink_filename, l_seq);
+		//goto SKIP;
+	}
+	// CHECK( ums_JSONrootValue );
+
+	/* Make a JSON Object with a JSONRootValue.*/
+	*root = json_value_get_object(*in_json); 
+	if( !*root ) {
+		fprintf(stderr, "illegal json format.\n");
+		fq_log(l, FQ_LOG_ERROR, "illegal json format. We throw it.\n");
+		FQ_TRACE_EXIT(l);
+		return false;
+		// commit_Q(l, deq_obj, unlink_filename, l_seq);
+	}
+	// CHECK( ums_JSONObject  );
+	fq_log(l, FQ_LOG_INFO, "The JSON object(root) creation was successful.");
+
+
+	sprintf(channel, "%s", json_object_get_string(*root, "CHANNEL"));
+	fq_log( l, FQ_LOG_INFO, "CHANNEL =>%s.", channel);
+
+	if( strlen(channel) != 2 ) { 
+		fprintf(stderr, "There is no channel .\n");
+		fq_log(l, FQ_LOG_ERROR, "There is no channel . We will throw it.\n");
+		FQ_TRACE_EXIT(l);
+		return false;
+	}
+	fq_log(l, FQ_LOG_INFO, "We succeeded in getting the channel information.('%s')", channel);
+	fprintf(stdout, "We succeeded in getting the channel information.('%s').\n", channel);
+
+	sprintf(seq_check_id, "%s", json_object_get_string(*root, my_conf->seq_check_key_name));
+	fq_log( l, FQ_LOG_INFO, "seq_check_id =>%s.", seq_check_id);
+
+	if( strlen(seq_check_id) <  6 ) { 
+		fprintf(stderr, "There is no seq_check_id.\n");
+		fq_log(l, FQ_LOG_ERROR, "There is no seq_check_id . We will throw it.\n");
+		FQ_TRACE_EXIT(l);
+		return false;
+	}
+	fq_log(l, FQ_LOG_INFO, "We succeeded in getting the seq_check_id information.('%s')", seq_check_id);
+	fprintf(stdout, "We succeeded in getting the seq_check_id information.('%s').\n", seq_check_id);
+
+	bool GssiFlag = json_object_get_boolean(*root, "GssiFlag");
+	if( GssiFlag ) {
+		char buf_var_data[2048];
+		sprintf(buf_var_data, "%s", json_object_get_string(*root, my_conf->var_data_json_key ));
+		fq_log(l, FQ_LOG_INFO, "Vardata='%s'.", buf_var_data);
+		
+		char buf_template[2048];
+		sprintf(buf_template, "%s", json_object_get_string(*root, my_conf->template_json_key));
+		fq_log(l, FQ_LOG_INFO, "Template='%s'", buf_template);
+
+		if( strlen(buf_var_data) < 1 || strlen(buf_template) < 6) {
+			fprintf(stderr, "illegal grammer.\n");
+			fq_log(l, FQ_LOG_ERROR, "illegal grammer. We will throw it.\n");
+			FQ_TRACE_EXIT(l);
+			return false;
+		}
+
+		unsigned char SSIP_buf[8192];
+		int rc;
+		rc = gssi_proc( l, buf_template, buf_var_data, "", cache_short_for_gssi, '|', SSIP_buf, sizeof(SSIP_buf));
+		if( rc < 0 ) {
+			fq_log(l, FQ_LOG_ERROR, "gssi_proc() error( not found tag ). rc=[%d].", rc);
+			FQ_TRACE_EXIT(l);
+			return(-1);
+		}
+		json_object_set_null(*root, my_conf->msg_json_target_key);
+		json_object_set_string(*root, my_conf->msg_json_target_key, SSIP_buf);
+
+		fq_log(l, FQ_LOG_INFO, "GSSI processing was successful. GssiFlag=[%d]", GssiFlag);
+	}
+	else {
+		fq_log(l, FQ_LOG_INFO, "No GSSI processing is required.  GssiFlag=[%d]", GssiFlag);
+	}
+
+#if 1
+	/* auto caching */
+	/* json_object_dotget_string(ums_JSONObject,  tmp->json_key)); */
+	ll_node_t *node_p = NULL;
+	for( node_p=json_key_datatype_obj_ll->head; (node_p != NULL); (node_p=node_p->next) ) {
+
+		json_key_datatype_t *tmp;
+		tmp = (json_key_datatype_t *) node_p->value;
+
+		bool cache_result = json_auto_caching( l, cache_short_for_gssi, *root,  tmp);
+
+		if( cache_result == false ) {
+			fq_log(l, FQ_LOG_ERROR, "json caching error.");
+			FQ_TRACE_EXIT(l);
+			return false;
+		}
+	}
+#endif
+	
+	char date[8+1], time[6+1], current_date_time[17];
+	get_time(date, time);
+	sprintf(current_date_time, "%s%s", date, time);
+	cache_update(cache_short_for_gssi, "DIST_Q_DTTM", current_date_time, 0);
+
+	fq_log(l, FQ_LOG_INFO, "It was done by doing the necessary caching on the distributor(splitter).");
+	fq_log(l, FQ_LOG_INFO, "\t - DIST_Q_DTTM: %s.", current_date_time);
+
+#if 0
+	if( GssiFlag ) {
+		int rc;
+		unsigned char SSIP_buf[8192];
+		rc = gssi_proc( l, buf_template, buf_var_data, "", cache_short_for_gssi, '|', SSIP_buf, sizeof(SSIP_buf));
+		if( rc < 0 ) {
+			fprintf(stderr, "gssi_proc() error( not found tag ). rc=[%d]\n", rc);
+			FQ_TRACE_EXIT(l);
+			return(-1);
+		}
+		fprintf( stdout, "Template SSIP Success!!!\n");
+		fprintf( stdout, "Template SSIP result: =[%s]\n", SSIP_buf);
+
+		cache_update(cache_short_for_gssi, "SendMsg", SSIP_buf, 0);
+	}
+	else {
+		fprintf( stderr, "Do not process GSSI. We send a SendMsg directly without converting.\n");
+
+		char SendMsg[4096];
+		sprintf(SendMsg, "%s", json_object_get_string(ums_JSONObject, "SendMsg"));
+		fprintf( stdout, "SendMsg=%s\n", SendMsg);
+
+		/* We put a SendMsg to short_cache for sending to co. */
+		cache_update(cache_short_for_gssi, "SendMsg", SendMsg, 0);
+	}
+#endif
+
+	FQ_TRACE_EXIT(l);
+	return true;
+}
+
+static bool TCI_parsing_caching_and_SSIP( fq_logger_t *l, ratio_dist_conf_t *my_conf, aformat_t *a,  unsigned char *ums_msg, cache_t *cache_short_for_gssi, char *channel, size_t ums_msg_len)
+{
+	char *errmsg = NULL;
+
+	FQ_TRACE_ENTER(l);
+
+	/* Parsing a message */
+	a->data = strdup(ums_msg);
+	a->datalen = ums_msg_len;
+
+	int len=0;
+	len = assoc_aformat(a, &errmsg);
+	if( len < 0 ) {
+		fprintf( stderr, "assoc_aformat() error. errmsg=[%s]\n", errmsg);
+		fq_log(l, FQ_LOG_ERROR, "assoc_aformat() error. errmsg=[%s].", errmsg);
+		FQ_TRACE_EXIT(l);
+		return false;
+	}
+
+	print_aformat_stdout( a );
+
+	fq_log(l, FQ_LOG_INFO, "ums message parsing ok.");
+
+	if( a->length != ums_msg_len ) {
+		fprintf( stderr, "illegal protocol: ums message and format length is different.\n");
+		fq_log(l, FQ_LOG_ERROR, "illegal protocol: ums message and format length is different.\n");
+		FQ_TRACE_EXIT(l);
+		return false;
+		// commit_Q(l, deq_obj, unlink_filename, l_seq);
+		// goto SKIP;
+	} 
+	if( a->data[0] != 'S' || a->data[a->length-1] != 'L' ) {
+		fprintf( stderr, "illegal protocol: start char or last char is different.\n");
+		fq_log(l, FQ_LOG_ERROR, "illegal protocol: start char or last char is different.\n");
+		FQ_TRACE_EXIT(l);
+		return false;
+		// commit_Q(l, deq_obj, unlink_filename, l_seqsequence );
+		// goto SKIP;
+	} 
+
+#if 1  // You myst free it using cache_free()
+	save_aformat_to_cache(a);
+#endif
+
+	char my_channel[3];
+	get_avalue(a, "channel", my_channel);
+	sprintf(channel, "%s", my_channel);
+
+	/* biz area */
+	char buf_phone_no[20];
+	get_avalue(a, "phone_no", buf_phone_no);
+	str_lrtrim(buf_phone_no);
+	fprintf( stdout, "phone_no: '%s'\n", buf_phone_no);
+
+	char buf_send_msg[128];
+	get_avalue(a, "send_msg", buf_send_msg);
+	str_lrtrim(buf_send_msg);
+	fprintf( stdout, "send_msg: '%s'\n", buf_send_msg);
+
+	// test
+	char *postdata_str = "name=choi&email=gwisang.choi@gmail.com";
+
+	char buf_template[2048];
+	get_avalue(a, "template", buf_template);
+	str_lrtrim(buf_template);
+
+	char buf_var_data[2048];
+	get_avalue(a, "var_data", buf_var_data);
+
+	str_lrtrim(buf_var_data);
+
+	unsigned char SSIP_result_for_TCI[8192];
+
+	int rc;
+	rc = gssi_proc( l, buf_template, buf_var_data, "", cache_short_for_gssi,'|', SSIP_result_for_TCI, sizeof(SSIP_result_for_TCI));
+	if( rc < 0 ) {
+		fprintf( stderr, "gssi_proc() error( not found tag ). rc=[%d]\n", rc);
+		FQ_TRACE_EXIT(l);
+		return(false);
+	}
+
+	fprintf( stdout, "SSIP Success!!!\n");
+	fprintf( stdout, "SSIP result: =[%s]\n", SSIP_result_for_TCI);
+
+	cache_update(a->cache_short, "SSIP_result", SSIP_result_for_TCI, 0);
+	// cache_update(cache_short_for_gssi, "SSIP_result", SSIP_result_for_TCI, 0);
+
+	FQ_TRACE_EXIT(l);
+
+	return true;
+}
+static bool make_TCI_send_message_and_enQ( fq_logger_t *l, ratio_dist_conf_t *my_conf, fqueue_obj_t *this_q, fqueue_obj_t *deq_obj, char *unlink_filename, long l_seq,  char co_initial, linkedlist_t *co_qformat_obj_ll, codemap_t *t, aformat_t *a)
+{
+	char postdata[1024];
+	char date[9], time[7];
+
+	get_time(date, time);
+	sprintf(postdata, "send_time=%s %s", date, time);
+
+	/* select a qformat */
+	ll_node_t *co_qformat_map_node = NULL;
+	char my_key[2];
+	sprintf(my_key, "%c", co_initial);
+	co_qformat_map_node  = linkedlist_find(co_qformat_obj_ll, my_key);
+	CHECK(co_qformat_map_node);
+
+	co_qformat_t *this_qformat = (co_qformat_t *) co_qformat_map_node->value;
+	qformat_t *this_qf = this_qformat->q;
+
+	fq_log(l, FQ_LOG_INFO, "qformat name: [%s].", this_qf->name);
+
+	fprintf( stdout, "Selected qformat name: %s \n", this_qf->name);
+	fprintf( stdout, "Selected qformat count of fileds: %d \n", this_qf->count);
+	fprintf( stdout, "Selected qformat length of message : %d \n", this_qf->length);
+
+	char co_name[16];
+	int rc;
+	rc = get_codeval(l, t, my_key, co_name);
+	CHECK(rc == 0);
+
+	// char temp_value[32];
+	// rc = get_codekey(l, t, "SKT", temp_value);
+	// CHECK(rc == 0);
+
+	cache_update(a->cache_short, "co_name", co_name, 0);
+
+	char send_time[16];
+	sprintf(send_time, "%s%s", date, time);
+	cache_update(a->cache_short, "send_time", send_time, 0);
+
+	fill_qformat(this_qf, postdata, a->cache_short, NULL);
+
+	int len;
+	len = assoc_qformat(this_qf, NULL);
+	if( len <= 0 ) {
+		fq_log(l, FQ_LOG_ERROR, "assoc_qformat('%s') error.", my_conf->co_protocol_format_file);
+		return 0;
+	}
+
+	fprintf( stdout, "TCI Assemble result...\n");
+	print_qformat(this_qf);
+
+	fq_log(l, FQ_LOG_INFO, "TCI Assemble. ok.");
+#if 1
+	fprintf( stdout, "send to co[%c]: '%s' len=%d.\n", co_initial, this_qf->data, this_qf->datalen);
+	rc = uchar_enQ(l, this_qf->data, this_qf->datalen, this_q);
+#else
+	rc = uchar_enQ(l, ums_msg, ums_msg_len, this_q);
+#endif
+	if( rc < 0 ) {
+		cancel_Q(l, deq_obj, unlink_filename, l_seq);		
+	}
+	else {
+		commit_Q(l, deq_obj, unlink_filename, l_seq);
+		fprintf( stdout, "Success !!!\n");
+		fq_log(l, FQ_LOG_INFO, "enQ. ok.");
+	}
+
+	if(this_qf->data) {
+		free(this_qf->data);
+		this_qf->data = NULL;
+	}
+
+	if(this_qf) free_qformat_values(&this_qf);
+
+	return true;
+}
+static bool make_JSON_send_message_and_enQ( fq_logger_t *l, JSON_Object *in_json_obj, char *key, char *channel, unsigned char *SSIP_result, cache_t *cache_short_for_gssi, ratio_dist_conf_t *my_conf, fqueue_obj_t *this_q, fqueue_obj_t *deq_obj, char *unlink_filename, long l_seq,  char co_initial, linkedlist_t *co_json_rule_obj_ll)
+{
+	/* select a qformat */
+	ll_node_t *co_json_rule_map_node = NULL;
+	char my_key[5];
+
+	FQ_TRACE_ENTER(l);
+
+	memset(my_key, 0x00, sizeof(my_key));
+	sprintf(my_key, "%c-%s", co_initial, channel);
+
+	co_json_rule_map_node  = linkedlist_find(co_json_rule_obj_ll, my_key);
+	CHECK(co_json_rule_map_node);
+	fq_log(l, FQ_LOG_INFO, "Select a rule for creating a sending message. key='%s', channle='%s'", key, channel);
+
+	co_json_rule_t *this_json_rule = (co_json_rule_t *) co_json_rule_map_node->value;
+	CHECK(this_json_rule);
+
+	fq_log(l, FQ_LOG_INFO, "One rule was selected normally.");
+
+	linkedlist_t *this_json_rule_ll = this_json_rule->json_tci_ll;
+
+	char *serialized_json_msg = NULL;
+
+	bool pretty_flag = true;
+	bool tf;
+	tf = make_serialized_json_by_rule(l, this_json_rule_ll, cache_short_for_gssi, in_json_obj, &serialized_json_msg, pretty_flag);
+	if( tf == false ) {
+		fq_log(l, FQ_LOG_ERROR, "make_serialized_json() error. We will commit for deleting.");
+		commit_Q(l, deq_obj, unlink_filename, l_seq);
+		SAFE_FREE(serialized_json_msg);
+		FQ_TRACE_EXIT(l);
+		return true;
+	}
+	fq_log(l, FQ_LOG_INFO, "A message was created according to the rules.");
+	fq_log(l, FQ_LOG_INFO, "serialized json msg(enQ msg): '%s'.", serialized_json_msg);
+
+#if 1
+	int rc;
+	rc = uchar_enQ(l, serialized_json_msg, strlen(serialized_json_msg), this_q);
+
+	if( rc < 0 ) {
+		cancel_Q(l, deq_obj, unlink_filename, l_seq);		
+		fq_log(l, FQ_LOG_ERROR, "Failed to put a message in queue.");
+	}
+	else {
+		commit_Q(l, deq_obj, unlink_filename, l_seq);
+		fq_log(l, FQ_LOG_ERROR, "Successfully put a message in queue. rc=[%d]", rc);
+	}
+#else
+	commit_Q(l, deq_obj, unlink_filename, l_seq);
+#endif
+
+	SAFE_FREE(serialized_json_msg);
+
+	FQ_TRACE_EXIT(l);
+
+	return true;
+}
+
+static bool forward_channel( fq_logger_t *l, aformat_t *a, ll_node_t *channel_queue_map_node, unsigned char *ums_msg, size_t ums_msg_len, fqueue_obj_t *deq_obj, char *unlink_filename, long l_seq)
+{
+	char channel[3];
+
+	FQ_TRACE_ENTER(l);
+
+	get_avalue(a, "channel", channel);
+
+	/* We will forward it to media  directly */
+	channel_queue_t *this = (channel_queue_t *) channel_queue_map_node->value;
+	fqueue_obj_t	*this_q = this->obj;
+	fprintf( stdout, "Selected a queue: path='%s', name='%s'.\n", this_q->path, this_q->qname);
+	fq_log(l, FQ_LOG_INFO, "Selected a queue: path='%s', name='%s'.", this_q->path, this_q->qname);
+	fprintf( stdout, "We will forward it to [%s].\n", channel);
+
+	int rc;
+	rc = uchar_enQ(l, ums_msg, ums_msg_len, this_q);
+	if( rc < 0 ) {
+		cancel_Q(l, deq_obj, unlink_filename, l_seq);		
+	}
+	else {
+		commit_Q(l, deq_obj, unlink_filename, l_seq);
+	}
+
+	fq_log(l, FQ_LOG_INFO, "forwarding ok.");
+
+	FQ_TRACE_EXIT(l);
+	return true;
+}
+static fqueue_obj_t *Select_a_queue_obj_and_co_initial_by_least_usage( fq_logger_t *l, char *channel, linkedlist_t *channel_co_queue_obj_ll, codemap_t *queue_co_initial_codemap, char *key, char *co_initial)
+{
+	/* find a queue having least gap */
+	fqueue_obj_t *qobj = NULL;
+	qobj  = find_least_gap_qobj_in_channel_co_queue_map( l, channel, channel_co_queue_obj_ll );
+	CHECK(qobj);
+
+	fprintf(stdout, "Current least queue is [%s/%s] for [%s].\n",  
+		qobj->path, qobj->qname, channel);
+	fq_log(l, FQ_LOG_INFO, "Current least queue is [%s/%s] for [%s].",  
+		qobj->path, qobj->qname, channel);
+
+	/* find a co_initial with qpath/qname in co_initial and queue map. */
+	char tmp_key[128]; /* qpath/qname */
+	char tmp_co_initial[16]; /* co-initial */
+	int rc;
+	
+	sprintf(tmp_key, "%s/%s", qobj->path, qobj->qname);
+	rc = get_codeval(l, queue_co_initial_codemap, tmp_key, tmp_co_initial);
+	CHECK(rc == 0);
+
+	sprintf(key, "%s-%s", channel, tmp_co_initial);
+
+	*co_initial = tmp_co_initial[0];
+	// *co_initial = 'K';
+
+	return qobj;
+}
+
+static fqueue_obj_t *Select_a_queue_obj_and_co_initial_by_ratio( fq_logger_t *l, char *channel, linkedlist_t *channel_co_ratio_obj_ll, linkedlist_t *channel_co_queue_obj_ll, codemap_t *queue_co_initial_codemap, char *key, char *co_initial)
+{
+	// We get a ratio object with a channel ID and
+	ll_node_t	*this_ratio_node=NULL;
+	this_ratio_node = linkedlist_find( channel_co_ratio_obj_ll , channel);
+	if( !this_ratio_node ) {
+		fq_log(l, FQ_LOG_ERROR, "Unknown ratio channel ID.(value='%s') We will skip it.", channel);
+		fprintf( stderr, "Unknown ratio channel ID.(value='%s') We will skip it.\n", channel);
+		return NULL;
+	}
+
+	channel_ratio_obj_t *this = (channel_ratio_obj_t *) this_ratio_node->value;
+	ratio_obj_t *this_ratio = this->ratio_obj;
+
+	fq_log(l, FQ_LOG_INFO, "Current ratio string is =[%s] for [%s].", 
+		this_ratio->ratio_string, channel);
+
+	// We get a co_initial of selected co.
+	*co_initial = this_ratio->on_select(l, this_ratio);
+	fprintf(stdout, "selected co_initial = [%c].\n", *co_initial);
+
+	// We get a queue object with co_initial .
+	ll_node_t *map_node = NULL;
+	sprintf(key, "%s-%c", channel, *co_initial);
+	// fprintf( stdout, "key=[%s]\n", key);
+
+	/* We get a fqueue object with a key(Co initial) */
+	map_node = linkedlist_find(channel_co_queue_obj_ll, key);
+	CHECK(map_node);
+
+	fq_log(l, FQ_LOG_INFO, "selected a queue object by ratio. ok. co_initial = [%c]", *co_initial);
+
+	channel_co_queue_t *this_coq = (channel_co_queue_t *) map_node->value;
+	fqueue_obj_t *qobj = this_coq->obj;
+
+	fq_log(l, FQ_LOG_INFO, "Selected a queue: path='%s', name='%s'.", qobj->path, qobj->qname);
+
+	return qobj;
+}
+
+static fqueue_obj_t *Select_a_queue_obj_by_co_initial(fq_logger_t *l, char *channel, char co_initial,  linkedlist_t *channel_co_queue_obj_ll)
+{
+	// We get a queue object with co_initial .
+	char key[16];
+	memset(key, 0x00, sizeof(key));
+	sprintf(key, "%s-%c", channel, co_initial);
+	// fprintf( stdout, "key=[%s]\n", key);
+
+	/* We get a fqueue object with a key(Co initial) */
+	ll_node_t *map_node = NULL;
+	map_node = linkedlist_find(channel_co_queue_obj_ll, key);
+	CHECK(map_node);
+
+	fq_log(l, FQ_LOG_INFO, "selected a queue object by co_initial. ok. co_initial = [%c]", co_initial);
+
+	channel_co_queue_t *this_coq = (channel_co_queue_t *) map_node->value;
+	fqueue_obj_t *qobj = this_coq->obj;
+
+	fq_log(l, FQ_LOG_INFO, "Selected a queue: path='%s', name='%s'.", qobj->path, qobj->qname);
+
+	return qobj;
+}
+
+/* Get but do not delete(remain) */
+int GetHash2( fq_logger_t *l, hashmap_obj_t *hash_obj, char *key, char **value)
+{
+	int rc;
+	unsigned char out[4096];
+	
+	FQ_TRACE_ENTER(l);
+
+	memset(out, 0x00, sizeof(out));
+	// out = calloc(hash_obj->h->h->max_data_length+1, sizeof(unsigned char));
+
+	rc = hash_obj->on_get(l, hash_obj, key, out);
+	if( rc == MAP_MISSING ) {
+		fq_log(l, FQ_LOG_ERROR, "'%s', '%s': key(%s) missing in Hashmap.", hash_obj->h->h->path, hash_obj->h->h->hashname, key);
+		return(FALSE);
+	}
+	else {
+		fq_log(l, FQ_LOG_DEBUG, "'%s', '%s': Get OK. key=[%s] value=[%s]", hash_obj->h->h->path, hash_obj->h->h->hashname, key, out);
+		*value = strdup(out);
+	}
+	FQ_TRACE_EXIT(l);
+
+	return(TRUE);
+}
+
+/* This function has memory leak */
+static bool is_guarantee_user( fq_logger_t *l, hashmap_obj_t *seq_check_hash_obj, char *seq_check_id, char *co_in_hash ) 
+{
+	char *get_value = NULL;
+	int rc;
+
+	rc = GetHash(l, seq_check_hash_obj, seq_check_id, &get_value);
+	if( rc != TRUE ) { /* not found */
+		// rc = PutHash(l, seq_check_hash_obj, seq_check_id, "KT" );
+		SAFE_FREE(get_value);
+		return false;
+	}
+	else { /* already used a co */
+		printf("We will put [%s] to [%s] for sequence guarantee.\n", seq_check_id, get_value );
+		fq_log(l, FQ_LOG_INFO, "We will put [%s] to [%s] for sequence guarantee.", seq_check_id, get_value );
+
+		*co_in_hash = *get_value;
+		SAFE_FREE(get_value);
+		return true;
+	}
+}
+static bool json_get_value_malloc_local( fq_logger_t *l, JSON_Object *ums_JSONObject, char *json_key, char *datatype, char **dst, long *dst_len)
+{
+	char buffer[8192];
+
+	char *p=NULL;
+	p = strstr(json_key, ".");
+
+	memset(buffer, 0x00, sizeof(buffer));
+
+	if(strcmp( datatype, "string") == 0 ) {
+		if( !p ) { 
+			sprintf(buffer, "%s", json_object_get_string(ums_JSONObject, json_key));
+			fq_log(l, FQ_LOG_DEBUG, "json_object_get_string('%s') result='%s'\n", json_key, buffer);
+		}
+		else {
+			sprintf(buffer, "%s", json_object_dotget_string(ums_JSONObject, json_key)); 
+		}
+		*dst_len = strlen(buffer);
+		*dst = strdup(buffer);
+	}
+	else if(strcmp( datatype, "number") == 0 ) {
+		if( !p ) { 
+			sprintf(buffer, "%f", json_object_get_number(ums_JSONObject, json_key));
+		}
+		else {
+			sprintf(buffer, "%f", json_object_dotget_number(ums_JSONObject, json_key));
+		}
+		*dst = strdup(buffer);
+	}
+	else if(strcmp( datatype, "bool") == 0 ) {
+		if( !p ) { 
+			sprintf(buffer, "%d", json_object_get_boolean(ums_JSONObject, json_key));
+		}
+		else {
+			sprintf(buffer, "%d", json_object_dotget_boolean(ums_JSONObject, json_key));
+		}
+		*dst = strdup(buffer);
+	}
+	else {
+		fq_log(l, FQ_LOG_ERROR, "[%s] -> Unsupport data type.", datatype);
+		return(false);
+	}
+	
+	return true;
+}
+
+static bool json_set_value( fq_logger_t *l, JSON_Object *ums_JSONObject, char *json_key, char *datatype, char *src)
+{
+	char buffer[8192];
+
+	char *p=NULL;
+	p = strstr(json_key, ".");
+
+	if(strcmp( datatype, "string") == 0 ) {
+		if( !p ) { 
+			json_object_set_string(ums_JSONObject, json_key, src);
+			fq_log(l, FQ_LOG_DEBUG, "json_object_set_string('%s', '%s').", json_key, src);
+		}
+		else {
+			json_object_dotset_string(ums_JSONObject, json_key, src); 
+		}
+	}
+	else if(strcmp( datatype, "number") == 0 ) {
+		long n;
+		n = atol(src);
+		if( !p ) { 
+			json_object_set_number(ums_JSONObject, json_key, n);
+		}
+		else {
+			json_object_dotset_number(ums_JSONObject, json_key, n);
+		}
+	}
+	else if(strcmp( datatype, "bool") == 0 ) {
+		if( !p ) { 
+			if( STRCCMP(src, "1") == 0 ) {
+				json_object_set_boolean(ums_JSONObject, json_key, true);
+			}
+			else {
+				json_object_set_boolean(ums_JSONObject, json_key, false);
+			}
+		}
+		else {
+			if( STRCCMP(src, "1") == 0 ) {
+				json_object_dotset_boolean(ums_JSONObject, json_key, true);
+			}
+			else {
+				json_object_dotset_boolean(ums_JSONObject, json_key, false);
+			}
+		}
+	}
+	else {
+		fq_log(l, FQ_LOG_ERROR, "[%s] -> Unsupport data type.", datatype);
+		return(false);
+	}
+	
+	return true;
+}
+bool make_serialized_json_by_rule_local( fq_logger_t *l, linkedlist_t *json_tci_ll, cache_t *cache, JSON_Object *in_json, char **target, bool pretty_flag )
+{
+	JSON_Value *out_json = json_value_init_object();
+	JSON_Object *root = json_value_get_object(out_json);
+	JSON_Value *branch = json_value_init_array();
+	JSON_Array *array_contents = json_value_get_array(branch);
+
+	FQ_TRACE_ENTER(l);
+
+    CHECK(json_tci_ll);
+    CHECK(cache);
+    CHECK(in_json);
+
+	ll_node_t *node_p = NULL;
+	for( node_p=json_tci_ll->head; (node_p != NULL); (node_p=node_p->next) ) {
+
+		json_tci_t *tmp;
+		tmp = (json_tci_t *) node_p->value;
+	
+		printf("find_key=[%s], target_key=[%s], datatype=[%s] source=[%s], fixed=[%s], mandatory=[%d]\n",
+            tmp->find_key, tmp->target_key, tmp->datatype, tmp->source, tmp->fixed, tmp->mandatory  );
+
+
+		if( strcmp( tmp->datatype, "string") == 0 ) {
+			if(  strcmp( tmp->source, "json" ) == 0 ) {
+#if 1
+				bool tf;
+				char *dst=NULL;
+				long  dst_len;
+				tf = json_get_value_malloc_local( l, in_json, tmp->find_key, tmp->datatype, &dst, &dst_len);
+				CHECK(tf);
+
+				json_set_value(l, root, tmp->target_key, tmp->datatype, dst); // put array to root
+
+				SAFE_FREE(dst);
+#else
+				const char *p=NULL;
+				p = json_object_get_string(in_json, tmp->find_key);
+				if( !p ) {
+					fq_log(l, FQ_LOG_ERROR, "'%s' not found from in_json.",  tmp->find_key);
+					goto return_false;
+				json_object_set_string(root, tmp->target_key, p); // put array to root
+
+				json_object_set_string(root, tmp->target_key, dst); // put array to root
+				SAFE_FREE(dst);
+#endif
+			}
+			else if(  strcmp( tmp->source, "cache" ) == 0 ) {
+				char *p=NULL;
+				p = cache_getval_unlocked(cache, tmp->find_key);
+				if( !p ) {
+					fq_log(l, FQ_LOG_ERROR, "'%s' not found from cache.",  tmp->find_key);
+					goto return_false;
+				}
+				json_set_value(l, root, tmp->target_key, tmp->datatype, p); // put array to root
+				//  json_object_set_string(root, tmp->target_key, p); // put array to root
+			}
+			else if(  strcmp( tmp->source, "fixed" ) == 0 ) {
+				json_set_value(l, root, tmp->target_key, tmp->datatype, tmp->fixed); // put array to root
+				// json_object_set_string(root, tmp->target_key, tmp->fixed); // put array to root
+			}
+			else {
+				fq_log(l, FQ_LOG_ERROR, "[%s] -> unsupported source data.", tmp->source);
+				return false;
+			}
+		}
+		else if( strcmp( tmp->datatype, "number") == 0 ) {
+			double d;
+			if(  strcmp( tmp->source, "json" ) == 0 ) {
+#if 1
+				bool tf;
+				char *dst=NULL;
+				long  dst_len;
+				tf = json_get_value_malloc( l, in_json, tmp->find_key, tmp->datatype, &dst, &dst_len);
+				CHECK(tf);
+
+				json_set_value(l, root, tmp->target_key, tmp->datatype, dst); // put array to root
+				// json_object_set_number(root, tmp->target_key, atol(dst)); // put array to root
+				SAFE_FREE(dst);
+#else
+				d = json_object_get_number(in_json, tmp->find_key);
+				json_object_set_number(root, tmp->target_key, d); // put array to root
+#endif
+			}
+			else if(  strcmp( tmp->source, "cache" ) == 0 ) {
+				char *p=NULL;
+				p = cache_getval_unlocked(cache, tmp->find_key);
+				if( !p ) {
+					fq_log(l, FQ_LOG_ERROR, "'%s' not found from cache.",  tmp->find_key);
+					goto return_false;
+				}
+				json_set_value(l, root, tmp->target_key, tmp->datatype, p); // put array to root
+				// json_object_set_number(root, tmp->target_key, atol(p)); // put array to root
+			}
+			else {
+				fq_log(l, FQ_LOG_ERROR, "[%s] -> unsupported source data.", tmp->source);
+				goto return_false;
+			}
+		}
+		else if( strcmp( tmp->datatype, "array") == 0 ) {
+			if(  strcmp( tmp->source, "json" ) == 0 ) {
+
+				// JSON_Array *in_array = json_object_get_array(in_json, "C0NTENTS");
+				JSON_Array *in_array = json_object_get_array(in_json, (const char *)tmp->find_key);
+				if( !in_array ) {
+					fq_log(l, FQ_LOG_ERROR, "[%s] array : not found from in json.",  tmp->find_key);
+					goto return_false;
+				}
+				fq_log(l, FQ_LOG_DEBUG, "array_count is [%ld].", json_array_get_count(in_array));
+
+				long i;
+				for (i = 0; i < json_array_get_count(in_array); i++) {
+					JSON_Value *value_one = json_array_get_value(in_array, i);
+
+					JSON_Value *new_value_one;
+					new_value_one = json_value_deep_copy(value_one);
+
+					CHECK(json_value_equals(value_one, new_value_one));
+
+					JSON_Status rc;
+					rc = json_array_append_value(array_contents, new_value_one);
+					CHECK( rc == JSONSuccess);
+
+				}
+ 				json_object_set_value(root, tmp->target_key, branch); // put array to root
+			}
+			else {
+				fq_log(l, FQ_LOG_ERROR, "array: [%s] -> unsupported source data.", tmp->source);
+				goto return_false;
+			}
+		}
+		else if( strcmp( tmp->datatype, "value") == 0 ) {
+			if(  strcmp( tmp->source, "json" ) == 0 ) {
+				JSON_Value *in_value = json_object_get_value( in_json, tmp->find_key);
+				if( !in_value ) {
+					fq_log(l, FQ_LOG_ERROR, "[%s] value : not found from in json.",  tmp->find_key);
+					goto return_false;
+				}
+				else {
+					JSON_Value *new_value = json_value_deep_copy(in_value);
+					json_object_set_value(root, tmp->target_key, new_value);
+					fq_log(l, FQ_LOG_DEBUG, "value('%s') to value('%s') copy success!", tmp->find_key, tmp->target_key);
+				}
+			}
+			else {
+				fq_log(l, FQ_LOG_ERROR, "array: [%s] -> unsupported source data.", tmp->source);
+				goto return_false;
+			}
+		}
+		else if( strcmp( tmp->datatype, "bool") == 0 ) {
+			if(  strcmp( tmp->source, "json" ) == 0 ) {
+#if 1
+				bool tf;
+				char *dst=NULL;
+				long  dst_len;
+				tf = json_get_value_malloc( l, in_json, tmp->find_key, tmp->datatype, &dst, &dst_len);
+				CHECK(tf);
+				if( atol(dst) == 1 ) {
+					json_set_value(l, root, tmp->target_key, tmp->datatype, dst); // put array to root
+					// json_object_set_boolean(root, tmp->target_key, true); // put array to root
+				}
+				else {
+					json_set_value(l, root, tmp->target_key, tmp->datatype, dst); // put array to root
+					// json_object_set_boolean(root, tmp->target_key, false); // put array to root
+				}
+				SAFE_FREE(dst);
+#else
+				bool tf;
+				tf = json_object_get_boolean(in_json, tmp->find_key);
+				json_object_set_boolean(root, tmp->target_key, tf);
+#endif
+			}
+			else if( strcmp(tmp->source, "cache" )== 0 ){
+				char *p=NULL;
+				p = cache_getval_unlocked(cache, tmp->find_key);
+				if( !p ) {
+					fq_log(l, FQ_LOG_ERROR, "'%s' not found from cache.",  tmp->find_key);
+					goto return_false;
+				}
+				if( STRCCMP( p, "true") == 0 ) {
+					json_set_value(l, root, tmp->target_key, tmp->datatype, p); // put array to root
+					// json_object_set_boolean(root, tmp->target_key, true ); // put array to root
+				}
+				else {
+					json_set_value(l, root, tmp->target_key, tmp->datatype, p); // put array to root
+					// json_object_set_boolean(root, tmp->target_key, false ); // put array to root
+				}
+			}
+			else {
+				fq_log(l, FQ_LOG_ERROR, "array: [%s] -> unsupported source data.", tmp->source);
+				goto return_false;
+			}
+		}
+		else {
+			fq_log(l, FQ_LOG_ERROR, "[%s] -> unsupported data type data.\n", tmp->datatype);
+			goto return_false;
+		}
+	}
+
+	char *tmp=NULL;
+	if( pretty_flag ) {
+        tmp = json_serialize_to_string_pretty(out_json);
+    }
+    else {
+        tmp = json_serialize_to_string(out_json);
+    }
+
+	*target = strdup(tmp);
+
+	SAFE_FREE(tmp);
+	json_array_clear(array_contents);
+	json_value_free(branch);
+	json_value_free(out_json);
+
+	return true; 
+
+return_false:
+	FQ_TRACE_EXIT(l);
+	return false;
+}

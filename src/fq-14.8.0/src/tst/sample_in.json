@@ -1,0 +1,23 @@
+{
+    "src": "scheduling-1.RequestQueueWorker",
+    "CHANNEL_TYPE": "SS",
+    "svcId": "PARKTEST00",
+	"bschedule": false,
+	"brealSend": false,
+	"HISTORY_KEY": "12345678",
+	"CHANNEL": "SM",
+	"MSG_KIND": "S",
+	"MSG_TYPE": "0",
+	"SETTLE_CODE": "N",
+	"SUB_STORE_NO":"0000",
+	"BANK_GUBUN": "1",
+	"SETTLE_DUMMY": "",
+	"MSG_VER": "01",
+	"REQUEST_CO_ID": "0000012345",
+	"REQUEST_DTTM": "20230916121212",
+	"DIST_Q_DTTM": "",
+	"RCV_PHN_NO": "01072021516",
+	"SND_PHN_NO": "0212341234",
+	"CALLBACK_NO": "0212341234",
+	"SMS_MESSAGE": "This is a SMS. 님 안녕하세요.\r\n\r 상품 만기도래 안내입니다."
+}

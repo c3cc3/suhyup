@@ -1,0 +1,28 @@
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [debug] fq_set_time_fmt::fq_log.c (00144): Pre-processed log time stamp format is '[%a %b %d %H:%M:%S.000 %Y] '
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] open_map_db_obj::fq_map_db.c (00088): enter
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] open_flock_obj::fq_flock.c (00031): enter
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] open_flock_obj::fq_flock.c (00088): exit
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] create_dummy_file::fqueue.c (00233): enter
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [emerg] create_dummy_file::fqueue.c (00236): This system supports O_LARGEFILE.
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [info] create_dummy_file::fqueue.c (00246): dummy file create open OK.[./TST2.map.DB]
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [info] create_dummy_file::fqueue.c (00252): dummy file ftruncate OK.[./TST2.map.DB]
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [info] create_dummy_file::fqueue.c (00258): dummy file chmod OK.[./TST2.map.DB]
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] create_dummy_file::fqueue.c (00262): exit
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] local_mmapping::fq_map_db.c (00051): enter
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] local_mmapping::fq_map_db.c (00063): exit
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] open_map_db_obj::fq_map_db.c (00149): exit
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] on_insert::fq_map_db.c (00235): enter
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] on_flock::fq_flock.c (00135): enter
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] on_flock::fq_flock.c (00151): exit
+[Wed Dec 27 17:47:33.992 2023] [758692:0] [trace] find_index::fq_map_db.c (00204): enter
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] find_index::fq_map_db.c (00210): exit
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] get_index::fq_map_db.c (00218): enter
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] on_funlock::fq_flock.c (00158): enter
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] on_funlock::fq_flock.c (00167): exit
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] on_insert::fq_map_db.c (00272): exit
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] close_map_db_obj::fq_map_db.c (00168): enter
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] local_munmap::fq_map_db.c (00071): enter
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] local_munmap::fq_map_db.c (00079): exit
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] close_flock_obj::fq_flock.c (00104): enter
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] close_flock_obj::fq_flock.c (00113): exit
+[Wed Dec 27 17:47:33.993 2023] [758692:0] [trace] close_map_db_obj::fq_map_db.c (00182): exit

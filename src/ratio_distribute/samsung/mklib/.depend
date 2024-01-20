@@ -1,0 +1,24 @@
+json_maker.o: json_maker.c /home/ums/fq/include/parson.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/config.h \
+ /home/ums/fq/include/fq_defs.h /home/ums/fq/include/fq_cache.h \
+ /home/ums/fq/include/fq_logger.h /home/ums/fq/include/fq_global.h \
+ /home/ums/fq/include/fq_version.h /home/ums/fq/include/fq_types.h \
+ /home/ums/fq/include/fq_linkedlist.h \
+ /home/ums/fq/include/fq_delimiter_list.h \
+ /home/ums/fq/include/fq_ratio_distribute.h \
+ /home/ums/fq/include/fq_common.h /home/ums/fq/include/fq_linkedlist.h \
+ /home/ums/fq/include/fq_delimiter_list.h \
+ /home/ums/fq/include/fq_codemap.h /home/ums/fq/include/fqueue.h \
+ /home/ums/fq/include/fq_flock.h /home/ums/fq/include/fq_unixQ.h \
+ /home/ums/fq/include/fq_eventlog.h \
+ /home/ums/fq/include/fq_external_env.h /home/ums/fq/include/fq_monitor.h \
+ /home/ums/fq/include/fq_semaphore.h /home/ums/fq/include/fq_hashobj.h \
+ /home/ums/fq/include/fq_codemap.h /home/ums/fq/include/fq_heartbeat.h \
+ /home/ums/fq/include/fq_typedef.h /home/ums/fq/include/fq_conf.h \
+ /home/ums/fq/include/fq_manage.h /home/ums/fq/include/fqueue.h \
+ /home/ums/fq/include/parson.h /home/ums/fq/include/fq_file_list.h \
+ /home/ums/fq/include/fq_timer.h /home/ums/fq/include/fq_hashobj.h \
+ /home/ums/fq/include/fq_tci.h /home/ums/fq/include/fq_cache.h \
+ /home/ums/fq/include/fq_conf.h /home/ums/fq/include/fq_mem.h \
+ /home/ums/fq/include/fq_scanf.h /home/ums/fq/include/fq_logger.h \
+ /home/ums/fq/include/fq_json_tci.h

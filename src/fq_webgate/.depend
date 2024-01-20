@@ -1,0 +1,24 @@
+webgate.o: webgate.c /ums/fq/include/fq_param.h \
+ /ums/fq/include/fq_config.h /ums/fq/include/fq_cache.h \
+ /ums/fq/include/fq_global.h /ums/fq/include/fq_version.h \
+ /ums/fq/include/fq_types.h /ums/fq/include/fq_logger.h \
+ /ums/fq/include/fqueue.h /ums/fq/include/fq_flock.h \
+ /ums/fq/include/fq_unixQ.h /ums/fq/include/fq_eventlog.h \
+ /ums/fq/include/fq_external_env.h /ums/fq/include/fq_monitor.h \
+ /ums/fq/include/fq_semaphore.h /ums/fq/include/fq_linkedlist.h \
+ /ums/fq/include/fq_hashobj.h /ums/fq/include/fq_codemap.h \
+ /ums/fq/include/fq_heartbeat.h /ums/fq/include/fq_common.h \
+ /ums/fq/include/config.h /ums/fq/include/fq_defs.h \
+ /ums/fq/include/fq_typedef.h /ums/fq/include/fq_conf.h \
+ /ums/fq/include/fq_manage.h /ums/fq/include/fqueue.h \
+ /ums/fq/include/parson.h /ums/fq/include/fq_pthread_mutex_lock.h \
+ /ums/fq/include/fq_socket.h /ums/fq/include/fq_logger.h \
+ /ums/fq/include/fq_common.h /ums/fq/include/fq_monitor.h \
+ /ums/fq/include/fq_protocol.h /ums/fq/include/fq_tcp_client_obj.h \
+ /ums/fq/include/fq_config.h /ums/fq/include/fq_gssi.h \
+ /ums/fq/include/fq_codemap.h /ums/fq/include/shm_queue.h \
+ /ums/fq/include/fq_file_list.h /ums/fq/include/fq_linkedlist.h \
+ /ums/fq/include/fq_ratio_distribute.h \
+ /ums/fq/include/fq_delimiter_list.h /ums/fq/include/parson.h \
+ /ums/fq/include/fq_hashobj.h /ums/fq/include/fq_scanf.h \
+ /ums/fq/include/fq_manage.h

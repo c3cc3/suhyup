@@ -1,0 +1,8 @@
+# 1-th: in 
+# 2-th: out
+# 3-th: message type
+# 5-th: length
+# 4-th: json data type
+# 6-th: mandatory
+DATA|DATA|json|0|value|0|true
+#Student.flag|Customer.flag|json|0|bool|0|true

@@ -1,0 +1,5 @@
+history_key
+rc = PutHash(l, history_hash_obj, "CO_RATIO_STRING", my_conf->co_ratio_string);
+CHECK(rc==TRUE);
+rc = GetHash(l, hash_obj, get_key, &get_value);
+CHECK(rc == TRUE);

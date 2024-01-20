@@ -1,0 +1,62 @@
+[?1049h[22;0;0t[>4;2m[?1h=[?2004h[?1004h[1;63r[?12h[?12l[22;2t[22;1t[27m[23m[29m[m[H[2J[?25l[63;1H"fq_mon_svr.c" 805L, 19602B[1;1H[34m/*
+** monitor.c
+** Description: This program sees status of all file queue semi-graphically.
+*/[m
+[35m#include [m[31m<stdio.h>[m
+[35m#include [m[31m<string.h>[m
+[35m#include [m[31m<stdlib.h>[m
+[35m#include [m[31m<curses.h>[m
+[35m#include [m[31m<pthread.h>[m
+[35m#include [m[31m<sys/types.h>[m
+[35m#include [m[31m<sys/ipc.h>[m
+[35m#include [m[31m<sys/shm.h>[m
+[35m#include [m[31m<sys/sem.h>[m
+
+[35m#include [m[31m"fqueue.h"[m
+[35m#include [m[31m"shm_queue.h"[m
+[35m#include [m[31m"fq_socket.h"[m
+[35m#include [m[31m"screen.h"[m
+[35m#include [m[31m"fq_file_list.h"[m
+[35m#include [m[31m"fuser_popen.h"[m
+[35m#include [m[31m"fq_manage.h"[m
+[35m#include [m[31m"parson.h"[m
+[35m#include [m[31m"fq_external_env.h"[m
+[35m#include [m[31m"monitor.h"[m
+
+[34m/* Customizing Area */[m
+[35m#define PRODUCT_NAME [m[31m"M&Wise UMS Distributor"[m
+[34m/* Please type your ethernet device name with  $ ip addr command */[m
+[35m#define ETHERNET_DEVICE_NAME [m[31m"eno1"[m
+
+[35m#define CURSOR_X_POSITION ([m[31m50[m[35m)  [m[34m// key waiting cursor position[m
+[35m#define MAX_FILES_QUEUES ([m[31m100[m[35m)
+#define USAGE_THRESHOLD ([m[31m90.0[m[35m)
+#define DISK_THRESHOLD ([m[31m1500000[m[35m)
+
+#define MONOTORING_WAITING_MSEC ([m[31m1000000[m[35m)[m
+
+[32mstatic[m [32mvoid[m *main_thread( [32mvoid[m *arg );
+[32mstatic[m [32mvoid[m main_title([32mint[m y, [32mchar[m *fname);
+[32mstatic[m [32mvoid[m disp_time([32mint[m y, [32mint[m x);
+[32mstatic[m [32mvoid[m disp_hostname_ip([32mint[m y, [32mint[m x, [32mint[m opened_q_cnt);
+[32mstatic[m [32mvoid[m disp_queue_data_home_dir([32mint[m y, [32mint[m x, [32mchar[m *qpath);
+[32mstatic[m [32mvoid[m *waiting_key_thread([32mvoid[m *arg);
+[32mstatic[m [32mvoid[m help([32mvoid[m);
+[32mstatic[m [32mvoid[m disp_GetAvailableSpace([32mint[m y, [32mint[m x, [32mconst[m [32mchar[m* path);
+[32mstatic[m [32mvoid[m detail_view([32mchar[m key);
+
+[32mchar[m g_eth_name[[31m16[m];
+
+bool_t user_quit_flag = [31m0[m;
+[34m/* Global variables */[m
+[32mtypedef[m [32mstruct[m Queues {
+    fqueue_obj_t *obj;
+    [32munsigned[m [32mchar[m old_data[[31m65536[m];
+    bool_t  status;
+    [32mint[m     en_tps;
+    [32mint[m     de_tps;
+    [32mlong[m    before_en;
+    [32mlong[m    before_de;
+    [32mtime_t[m  en_competition;
+    [32mtime_t[m  de_competition;
+    [32mlong[m    en_sum;[63;220H1,1[11CTop[1;1H[?25h[?25l[63;1H[K[63;1H:[219C1,1[11CTop[1;1H[?25h[?25l[63;220H2[2;1H[?25h[?25l[63;1H[K[63;1H:[?25hq![?25l[?2004l[>4;m[23;2t[23;1t[63;1H[K[63;1H[?1004l[?2004l[?1l>[?25h[>4;m[?1049l[23;0;0t2 files to edit

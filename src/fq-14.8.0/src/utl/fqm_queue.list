@@ -1,0 +1,40 @@
+# 1-th column: path
+# 2-th column: qname
+# 3-th       : mapping_num
+# 4-th       : multi_num
+# 5-th       : msglen
+#
+/ums/enmq|GW-REAL-PREHIST|100|100|65536
+/ums/enmq|GW-BAT-PREHIST|100|100|65536
+/ums/enmq|GW-REAL-REQ|100|100|65536
+/ums/enmq|GW-REAL-HIST|100|100|65536
+/ums/enmq|GW-REAL-HIST-815|100|100|65536
+/ums/enmq|GW-REAL-HIST-816|100|100|65536
+/ums/enmq|GW-REAL-HIST-817|100|100|65536
+/ums/enmq|GW-REAL-RESERVE|100|100|65536
+/ums/enmq|GW-REAL-FAIL|100|100|65536
+#
+/ums/enmq|GW-BAT-REQ|100|100|65536
+/ums/enmq|GW-BAT-HIST|100|100|65536
+/ums/enmq|GW-EAI-ACK|100|100|65536
+/ums/enmq|GW-EAI-RPT-LOG|100|100|65536
+/ums/enmq|GW-EAI-RPT|100|100|65536
+/ums/enmq|GW-EAI-LAW|100|100|65536
+/ums/enmq|GW-EAI-LAW-LOG|100|100|65536
+/ums/enmq|GW-RESEND-HIST|100|100|65536
+#
+/ums/enmq|KT_ONL|100|100|65536
+/ums/enmq|KT_BAT|100|100|65536
+/ums/enmq|LG_SM_ONL|100|100|65536
+/ums/enmq|LG_MM_ONL|100|100|65536
+/ums/enmq|LG_SM_BAT|100|100|65536
+/ums/enmq|LG_MM_BAT|100|100|65536
+#
+/ums/enmq|K_ONL|100|100|65536
+/ums/enmq|K_BAT|100|100|65536
+/ums/enmq|C_ONL|100|100|65536
+/ums/enmq|C_BAT|100|100|65536
+/ums/enmq|DEL_HASH|100|100|256
+/ums/enmq|RCS|100|100|65536
+/ums/enmq|CTRL|100|100|2048
+/ums/enmq|FQPM_ALARM|100|100|2048

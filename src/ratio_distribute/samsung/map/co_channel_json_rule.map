@@ -1,0 +1,12 @@
+# SMS
+K|SS|/home/ums/fq/src/ratio_distribute/rule/SS_K_json_make.rule
+L|SS|/home/ums/fq/src/ratio_distribute/rule/SS_L_json_make.rule
+# LMS
+K|SL|/home/ums/fq/src/ratio_distribute/rule/SL_K_json_make.rule
+L|SL|/home/ums/fq/src/ratio_distribute/rule/SL_L_json_make.rule
+# MMS
+K|SM|/home/ums/fq/src/ratio_distribute/rule/SM_K_json_make.rule
+L|SM|/home/ums/fq/src/ratio_distribute/rule/SM_L_json_make.rule
+# KAKAO
+B|KA|/home/ums/fq/src/ratio_distribute/rule/KA_B_json_make.rule
+P|PU|/home/ums/fq/src/ratio_distribute/rule/PU_P_json_make.rule

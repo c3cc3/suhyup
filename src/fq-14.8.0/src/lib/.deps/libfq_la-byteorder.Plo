@@ -1,0 +1,5 @@
+libfq_la-byteorder.lo: byteorder.c /usr/include/stdc-predef.h byteorder.h
+
+/usr/include/stdc-predef.h:
+
+byteorder.h:

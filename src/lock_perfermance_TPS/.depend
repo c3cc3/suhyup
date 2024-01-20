@@ -1,0 +1,14 @@
+lock_perfermance_TPS.o: lock_perfermance_TPS.c /ums/fq/include/fqueue.h \
+ /ums/fq/include/fq_flock.h /ums/fq/include/fq_logger.h \
+ /ums/fq/include/fq_global.h /ums/fq/include/fq_version.h \
+ /ums/fq/include/fq_types.h /ums/fq/include/fq_unixQ.h \
+ /ums/fq/include/fq_eventlog.h /ums/fq/include/fq_external_env.h \
+ /ums/fq/include/fq_monitor.h /ums/fq/include/fq_semaphore.h \
+ /ums/fq/include/fq_linkedlist.h /ums/fq/include/fq_hashobj.h \
+ /ums/fq/include/fq_codemap.h /ums/fq/include/fq_cache.h \
+ /ums/fq/include/fq_heartbeat.h /ums/fq/include/fq_common.h \
+ /ums/fq/include/config.h /ums/fq/include/fq_defs.h \
+ /ums/fq/include/fq_typedef.h /ums/fq/include/fq_conf.h \
+ /ums/fq/include/fq_manage.h /ums/fq/include/fqueue.h \
+ /ums/fq/include/parson.h /ums/fq/include/fq_common.h \
+ /ums/fq/include/fq_monitor.h /ums/fq/include/fq_timer.h
